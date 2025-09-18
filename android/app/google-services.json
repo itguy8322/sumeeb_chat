@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "845897869656",
+    "project_id": "sumeeb-chat",
+    "storage_bucket": "sumeeb-chat.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:845897869656:android:201c998036b62eda2b1d2d",
+        "android_client_info": {
+          "package_name": "com.sumeeb.chatapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCC8ZitV3mM_sWrRrwoBR9Fyw7db7HbUKk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
