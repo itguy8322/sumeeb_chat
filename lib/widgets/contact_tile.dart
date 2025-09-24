@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/user_model.dart';
+import '../data/models/user/user_model.dart';
 
 class ContactTile extends StatelessWidget {
   final AppUser user;
@@ -9,8 +9,28 @@ class ContactTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: CircleAvatar(child: Text(user.name.isNotEmpty ? user.name[0] : '?')),
-      title: Text(user.name),
+      leading: CircleAvatar(
+        child: user.profilePhoto != null
+            ? user.profilePhoto!.isNotEmpty
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(70),
+                      child: Image.network(user.profilePhoto!),
+                    )
+                  : Text(
+                      user.name[0],
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    )
+            : Text(
+                user.name[0],
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.surface,
+                  fontSize: 22,
+                ),
+              ),
+      ),
+      title: Text(user.disPlayName.isNotEmpty ? user.disPlayName : user.name),
       subtitle: Text(user.phone ?? ''),
       onTap: () => onTap(user),
     );

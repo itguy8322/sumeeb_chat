@@ -1,0 +1,25 @@
+class AppUser {
+  final String id; // e.g. phone number in E.164 or generated id
+  final String name;
+  final String disPlayName;
+  final String? phone;
+  final String? profilePhoto;
+
+  AppUser({
+    required this.id,
+    required this.name,
+    required this.disPlayName,
+    this.phone,
+    this.profilePhoto,
+  });
+
+  Map<String, dynamic> toMap() => {'id': id, 'name': name, 'phone': phone};
+
+  factory AppUser.fromMap(Map<String, dynamic> m) => AppUser(
+    id: m['id'] as String,
+    name: m['name'] as String? ?? '',
+    disPlayName: m['disPlayName'] as String? ?? '',
+    phone: m['phone'] as String?,
+    profilePhoto: m['profilePhoto'] as String?,
+  );
+}

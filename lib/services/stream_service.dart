@@ -10,12 +10,11 @@ class StreamService {
 
   // Token endpoint on your backend that creates user tokens securely with Stream API secret.
   // For Android emulator, use http://10.0.2.2:3000/token?user_id=...
-  final String tokenUrl = 'http://10.0.2.2:3000/token';
 
   late final StreamChatClient client;
 
   StreamService() {
-    client = StreamChatClient(apiKey, logLevel: Level.INFO);
+    client = StreamChatClient(apiKey, logLevel: Level.OFF);
   }
   String formatUserId(String phoneNumber) {
     // remove '+' and any non-allowed characters
@@ -26,7 +25,10 @@ class StreamService {
     // final token = await _fetchToken(userId);
     final currentUserId = formatUserId(userId);
     print("============ CUREENT User :$currentUserId");
-    final user = User(id: currentUserId, extraData: {'name': userName});
+    final user = User(
+      id: currentUserId,
+      extraData: {'name': userId, 'phone': currentUserId},
+    );
 
     if (useDevToken) {
       await client.connectUser(user, client.devToken(currentUserId).rawValue);
@@ -35,21 +37,18 @@ class StreamService {
     }
     final fcmToken = await FirebaseMessaging.instance.getToken();
     if (fcmToken != null) {
-      await client.addDevice(fcmToken, PushProvider.firebase);
+      print("################### FCM TOKEN ###################");
+      print(fcmToken);
+      print("################### FCM TOKEN ###################");
+      await client.addDevice(
+        fcmToken,
+        PushProvider.firebase,
+        pushProviderName: "Sumeeb-Chat",
+      );
       print("📲 Registered FCM token with Stream: $fcmToken");
+      print("################### FCM TOKEN ###################");
     }
   }
-
-  // Future<String> _fetchToken(String userId) async {
-  //   if (useDevToken) return client.devToken(userId).rawValue;
-  //   final uri = Uri.parse('$tokenUrl?user_id=$userId');
-  //   final res = await http.get(uri);
-  //   if (res.statusCode != 200) {
-  //     throw Exception('Failed to fetch token: ${res.statusCode} ${res.body}');
-  //   }
-  //   final map = json.decode(res.body) as Map<String, dynamic>;
-  //   return map['token'] as String;
-  // }
 
   Future<Channel> createOrGetDirectChannel(
     String currentUserId,
@@ -60,7 +59,7 @@ class StreamService {
     final channel = client.channel(
       'messaging',
       extraData: {
-        'members': [currentUserId, otherUserId],
+        'members': [otherUserId, currentUserId],
       },
     );
     await channel.watch();

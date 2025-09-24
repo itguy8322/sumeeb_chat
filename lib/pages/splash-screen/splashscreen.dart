@@ -3,16 +3,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:stream_chat_flutter/stream_chat_flutter.dart';
-import 'package:sumeeb_chat/cubits/auth_cubit.dart';
-import 'package:sumeeb_chat/cubits/storage/storage_cubit.dart';
-import 'package:sumeeb_chat/pages/contacts_page.dart';
-import 'package:sumeeb_chat/pages/login_page.dart';
+import 'package:sumeeb_chat/data/cubits/auth_cubit.dart';
+import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_cubit.dart';
+import 'package:sumeeb_chat/data/cubits/storage/storage_cubit.dart';
+import 'package:sumeeb_chat/data/cubits/storage/storage_state.dart';
+import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
+import 'package:sumeeb_chat/data/models/user/user_model.dart';
+import 'package:sumeeb_chat/pages/home/home_page.dart';
+import 'package:sumeeb_chat/pages/login/login_page.dart';
+import 'package:sumeeb_chat/pages/login/other_info_step.dart';
 import 'package:sumeeb_chat/services/push_notification_service.dart';
 import 'package:sumeeb_chat/services/stream_service.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final StreamService streamService;
+  const SplashScreen({super.key, required this.streamService});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -41,7 +46,6 @@ class _SplashScreenState extends State<SplashScreen> {
     requestPermissions();
     // FirebaseMessaging messaging = FirebaseMessaging.instance;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      PushNotificationService.initialize();
       final sCubit = BlocProvider.of<StorageCubit>(context);
       sCubit.getUserData();
 
@@ -62,16 +66,25 @@ class _SplashScreenState extends State<SplashScreen> {
         children: [
           MultiBlocListener(
             listeners: [
-              BlocListener<StorageCubit, Map<String, dynamic>>(
+              BlocListener<StorageCubit, StorageState>(
                 listener: (context, state) {
                   ////print(state);
-                  if (state["phoneNumber"] != null && state["name"] != null) {
-                    print(state["phoneNumber"]);
-                    context.read<AuthCubit>().login(
-                      phone: state["phoneNumber"],
-                      name: state["name"],
-                    );
+                  final appSettings = state.appSettings;
+                  if (appSettings != null) {
+                    if (appSettings.phone != null) {
+                      context.read<AuthCubit>().login(
+                        phone: appSettings.phone!,
+                      );
+
+                      print(appSettings.phone);
+                    } else {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginPage()),
+                      );
+                    }
                   } else {
+                    print("NULLLLLLLLL");
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => LoginPage()),
@@ -88,16 +101,27 @@ class _SplashScreenState extends State<SplashScreen> {
                       MaterialPageRoute(builder: (context) => LoginPage()),
                     );
                   } else if (state is AuthAuthenticated) {
-                    final streamService = StreamService();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ContactsPage(
-                          currentUser: state.user,
-                          streamService: streamService,
+                    context.read<UserCubit>().setUuser(state.user);
+                    if (state.user.name.isNotEmpty) {
+                      context.read<ChatConnectionCubit>().setStreamService(
+                        widget.streamService,
+                      );
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              HomePage(streamService: widget.streamService),
                         ),
-                      ),
-                    );
+                      );
+                    } else {
+                      print(state.user.profilePhoto);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => OtherInfoStep(),
+                        ),
+                      );
+                    }
                   }
                 },
               ),
