@@ -106,6 +106,9 @@ class _ChatsPageState extends State<ChatsPage> {
                           print(
                             "=============== CONNECTING OTHER USER: ${u.id}",
                           );
+                          context.read<RecentChatCubit>().resetMessageCount(
+                            u.id,
+                          );
                           context.read<ChatConnectionCubit>().makeConnection(
                             user!,
                             u,

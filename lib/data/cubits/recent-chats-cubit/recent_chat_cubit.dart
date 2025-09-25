@@ -1,3 +1,5 @@
+// ignore_for_file: no_leading_underscores_for_local_identifiers, avoid_print
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:isar/isar.dart';
 import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_state.dart';
@@ -63,12 +65,18 @@ class RecentChatCubit extends Cubit<RecentChatState> {
     // getRecentChats();
   }
 
-  addChatToHistoryFromNotification(String phone, String message) async {
+  addChatToHistoryFromNotification(
+    String phone,
+    String message,
+    bool isCurrent,
+  ) async {
     print("============= ADDING HISTORY FROM NOTIFICATION =============");
     final recentChatUser = await isar.irecentChats.get(int.parse(phone));
     if (recentChatUser != null) {
       print("User exists, updating message count");
-      recentChatUser.messageCount += 1;
+      if (!isCurrent) {
+        recentChatUser.messageCount += 1;
+      }
       recentChatUser.lastMessage = message;
       recentChatUser.date = DateTime.now().toString();
       recentChatUser.status = 'received';
@@ -83,7 +91,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
     String name = phone;
     String profilePhoto = '';
     if (_user != null) {
-      name = _user.name ?? phone;
+      name = _user.name.isNotEmpty ? _user.name : phone;
       profilePhoto = _user.profilePhoto ?? '';
     }
     final recentUser = IrecentChats(id: int.parse(phone))
@@ -91,6 +99,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
       ..phone = phone
       ..lastMessage = message
       ..profilePhoto = profilePhoto
+      ..messageCount += 1
       ..date = DateTime.now().toString()
       ..status = 'received';
     // final newRecentChats = List<RecentChatModel>.from(state.recentChats);
@@ -121,6 +130,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
           final recentChat = RecentChatModel(
             user: appUser,
             message: user.lastMessage!,
+            messageCount: "${user.messageCount}",
             date: user.date!,
             status: user.status!,
           );
@@ -140,6 +150,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
             profilePhoto: user.profilePhoto,
           ),
           message: user.lastMessage!,
+          messageCount: user.messageCount.toString(),
           date: user.date!,
           status: user.status!,
         );
@@ -149,6 +160,19 @@ class RecentChatCubit extends Cubit<RecentChatState> {
 
     emit(state.copyWith(recentChats: recentChats));
     print("---=====================${state.recentChats}");
+  }
+
+  resetMessageCount(String id) async {
+    final recentChatUser = await isar.irecentChats.get(int.parse(id));
+    if (recentChatUser != null) {
+      print("============= RESETTING MESSAGE COUNT =============");
+      recentChatUser.messageCount = 0;
+      await isar.writeTxn(() async {
+        await isar.irecentChats.put(recentChatUser); // insert or update
+        print("============= RESETTING MESSAGE COUNT =============");
+      });
+      getRecentChats();
+    }
   }
 
   Future<void> deleteUser(int id) async {

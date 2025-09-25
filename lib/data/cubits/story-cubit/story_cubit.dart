@@ -12,6 +12,7 @@ import 'package:sumeeb_chat/data/models/story-model/story_model.dart';
 import 'package:sumeeb_chat/data/models/user/user_model.dart';
 import 'package:sumeeb_chat/data/repositories/file_upload_repository.dart/file_upload_repository.dart';
 import 'package:sumeeb_chat/data/repositories/firestore/firestore_repository.dart';
+import 'package:sumeeb_chat/styles/story_colors.dart';
 
 class StoryCubit extends Cubit<StoryState> {
   final FirestoreRepository firestore;
@@ -35,6 +36,9 @@ class StoryCubit extends Cubit<StoryState> {
         loadingInProgress: true,
         loadingSuccess: false,
         loadingFailure: false,
+        uploadingFailure: false,
+        uploadingInProgress: false,
+        uploadingSuccess: false,
       ),
     );
 
@@ -83,6 +87,9 @@ class StoryCubit extends Cubit<StoryState> {
           loadingInProgress: false,
           loadingSuccess: true,
           loadingFailure: false,
+          uploadingFailure: false,
+          uploadingInProgress: false,
+          uploadingSuccess: false,
         ),
       );
     } catch (e) {
@@ -92,6 +99,9 @@ class StoryCubit extends Cubit<StoryState> {
           loadingInProgress: false,
           loadingSuccess: false,
           loadingFailure: true,
+          uploadingFailure: false,
+          uploadingInProgress: false,
+          uploadingSuccess: false,
         ),
       );
     }
@@ -172,16 +182,11 @@ class StoryCubit extends Cubit<StoryState> {
   }
 
   onColorChanged() {
-    if (state.color == 'blue') {
-      emit(state.copyWith(color: 'green'));
-    } else if (state.color == 'green') {
-      emit(state.copyWith(color: 'purple'));
-    } else if (state.color == 'purple') {
-      emit(state.copyWith(color: 'pink'));
-    } else if (state.color == 'pink') {
-      emit(state.copyWith(color: 'amber'));
-    } else if (state.color == 'amber') {
-      emit(state.copyWith(color: 'blue'));
+    if (state.colorIndex >= storyColors.length - 1) {
+      emit(state.copyWith(colorIndex: 0));
+    } else {
+      final index = state.colorIndex + 1;
+      emit(state.copyWith(colorIndex: index));
     }
   }
 
@@ -256,7 +261,7 @@ class StoryCubit extends Cubit<StoryState> {
       "storyId": "story_${generateUniqueId()}",
       "type": state.type,
       "text": storyText ?? '',
-      "color": state.color,
+      "color": state.colorIndex,
       "caption": state.caption,
       "photoUrl": state.photoUrl,
       "videoUrl": state.videoUrl,

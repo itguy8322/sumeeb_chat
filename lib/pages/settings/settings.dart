@@ -158,11 +158,14 @@ class AccountSection extends StatelessWidget {
                   title: Text(state.user!.name),
                   subtitle: Text(state.user!.phone ?? ''),
                   trailing: FilledButton.tonal(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                    ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Sign out'),
-                        Icon(Icons.exit_to_app_sharp),
+                        Text('Sign out', style: TextStyle(color: Colors.black)),
+                        Icon(Icons.exit_to_app_sharp, color: Colors.black),
                       ],
                     ),
                     onPressed: () async {

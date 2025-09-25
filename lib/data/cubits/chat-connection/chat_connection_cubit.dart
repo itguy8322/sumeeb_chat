@@ -11,6 +11,10 @@ class ChatConnectionCubit extends Cubit<ChatConnectionState> {
     return phoneNumber.replaceAll(RegExp(r'[^a-z0-9@_-]'), '');
   }
 
+  resetConnection() {
+    emit(ChatConnectionState.initial());
+  }
+
   setStreamService(StreamService streamService) {
     print("<<<<<<<<<<<<<<<<<<<<<<SETTING STREAM SERVICE>>>>>>>>>>>>>>>>>>>>>>");
     print(streamService);

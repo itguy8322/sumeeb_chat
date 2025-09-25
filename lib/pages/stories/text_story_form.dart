@@ -41,8 +41,8 @@ class _TextStoryFormState extends State<TextStoryForm> {
     return BlocBuilder<StoryCubit, StoryState>(
       builder: (context, story) {
         return Scaffold(
-          appBar: AppBar(backgroundColor: storyColors[story.color]),
-          backgroundColor: storyColors[story.color],
+          appBar: AppBar(backgroundColor: storyColors[story.colorIndex]),
+          backgroundColor: storyColors[story.colorIndex],
           body: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
@@ -76,7 +76,7 @@ class _TextStoryFormState extends State<TextStoryForm> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Row(
-                        spacing: 20,
+                        // spacing: 20,
                         children: [
                           IconButton(
                             onPressed: _toggleEmojiPicker,
@@ -88,17 +88,17 @@ class _TextStoryFormState extends State<TextStoryForm> {
                               "T",
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
+                                fontSize: 25,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
+                          SizedBox(width: 12),
                           InkWell(
                             onTap: () {
                               context.read<StoryCubit>().onColorChanged();
                             },
-                            child: Text("Color"),
-                            // child: Image.asset("assets/icon/painting.png"),
+                            child: Image.asset("assets/icon/painting.png"),
                           ),
                         ],
                       ),

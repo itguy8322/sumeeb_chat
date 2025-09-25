@@ -104,6 +104,7 @@ class FirestoreRepository {
     final snapshot = await db
         .collection('stories')
         .where("userId", isEqualTo: userId)
+        .orderBy('timestamp', descending: true)
         .get();
 
     // Map all docs directly into StoryModel list
@@ -112,6 +113,7 @@ class FirestoreRepository {
       final viewsSnapshots = await doc.reference.collection('views').get();
       final views = viewsSnapshots.docs.map((view) => view.data()).toList();
       print("#############@@@@@@@@@@@@@@##### $views");
+      print(doc.data()['color']);
       stories.add(StoryModel.fromJson(doc.data(), views));
     }
 

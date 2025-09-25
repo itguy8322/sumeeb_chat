@@ -31,6 +31,26 @@ class StoriesPage extends StatelessWidget {
             leading: SizedBox(),
             leadingWidth: 0,
             title: Text("Stories"),
+            actions: [
+              BlocBuilder<StoryCubit, StoryState>(
+                builder: (context, state) {
+                  if (state.loadingInProgress) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    );
+                  }
+                  return SizedBox();
+                },
+              ),
+            ],
           ),
           body: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -42,18 +62,18 @@ class StoriesPage extends StatelessWidget {
                   BlocBuilder<StoryCubit, StoryState>(
                     builder: (context, story) {
                       final myStories = story.myStories;
-                      // if (story.uploadingSuccess) {
-                      //   final contacts = context
-                      //       .read<ContactsCubit>()
-                      //       .state
-                      //       .contacts;
-                      //   context.read<StoryCubit>().loadStories(contacts, user);
-                      // }
+                      if (story.uploadingSuccess) {
+                        final contacts = context
+                            .read<ContactsCubit>()
+                            .state
+                            .contacts;
+                        context.read<StoryCubit>().loadStories(contacts, user);
+                      }
                       int totalViews = 0;
                       print(
                         "#############   ############# STORIES ${myStories!.length}",
                       );
-                      for (final story in myStories) {
+                      for (final story in myStories!) {
                         print(
                           "#############   ############# VIEWS ${story.views!.length}",
                         );
@@ -136,34 +156,6 @@ class StoriesPage extends StatelessWidget {
                       );
                     },
                   ),
-                  // BlocBuilder<StoryCubit, StoryState>(
-                  //   builder: (context, state) {
-                  //     if (state.showViews) {
-                  //       if (state.myStories != null) {
-                  //         if (state.myStories!.isEmpty) {
-                  //           return SizedBox();
-                  //         } else {
-                  //           return SingleChildScrollView(
-                  //             child: Column(
-                  //               children: List.generate(
-                  //                 state.myStories!.length,
-                  //                 (index) => ListTile(
-                  //                   title: Text(
-                  //                     "${state.myStories![index].views!.length}",
-                  //                   ),
-                  //                 ),
-                  //               ),
-                  //             ),
-                  //           );
-                  //         }
-                  //       } else {
-                  //         return SizedBox();
-                  //       }
-                  //     } else {
-                  //       return SizedBox();
-                  //     }
-                  //   },
-                  // ),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Padding(
@@ -179,69 +171,66 @@ class StoriesPage extends StatelessWidget {
                               .state
                               .mappedContacts;
                           print("#############============ $mappedContacts");
-                          return s.loadingInProgress
-                              ? CircularProgressIndicator()
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  spacing: 10,
-                                  children: [
-                                    InkWell(
-                                      onTap: () {
-                                        if (Platform.isWindows) {
-                                          context
-                                              .read<SiderManagerCubit>()
-                                              .onViewMediaStoryPage(user);
-                                        } else {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  MediaStoryForm(user: user),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      child: NewStoryCard(
-                                        isCurrentUser: true,
-                                        user: user,
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            spacing: 10,
+                            children: [
+                              InkWell(
+                                onTap: () {
+                                  if (Platform.isWindows) {
+                                    context
+                                        .read<SiderManagerCubit>()
+                                        .onViewMediaStoryPage(user);
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            MediaStoryForm(user: user),
                                       ),
-                                    ),
-                                    for (String userId in stories.keys)
-                                      (InkWell(
-                                        onTap: () {
-                                          if (Platform.isWindows) {
-                                            context
-                                                .read<SiderManagerCubit>()
-                                                .onViewStatusPage(
-                                                  user,
-                                                  userId,
-                                                  stories[userId]!,
-                                                );
-                                          } else {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    ViewStoryPage(
-                                                      user: user,
-                                                      userId: userId,
-                                                      stories: stories[userId]!,
-                                                    ),
-                                              ),
-                                            );
-                                          }
-                                        },
-                                        child: NewStoryCard(
-                                          user: mappedContacts[userId]!,
-                                          story: stories[userId]![0],
+                                    );
+                                  }
+                                },
+                                child: NewStoryCard(
+                                  isCurrentUser: true,
+                                  user: user,
+                                ),
+                              ),
+                              for (String userId in stories.keys)
+                                (InkWell(
+                                  onTap: () {
+                                    if (Platform.isWindows) {
+                                      context
+                                          .read<SiderManagerCubit>()
+                                          .onViewStatusPage(
+                                            user,
+                                            userId,
+                                            stories[userId]!,
+                                          );
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => ViewStoryPage(
+                                            user: user,
+                                            userId: userId,
+                                            stories: stories[userId]!,
+                                          ),
                                         ),
-                                      )),
-                                    // NewStoryCard(),
-                                    // NewStoryCard(),
-                                    // NewStoryCard(),
-                                  ],
-                                );
+                                      );
+                                    }
+                                  },
+                                  child: NewStoryCard(
+                                    user: mappedContacts[userId]!,
+                                    story: stories[userId]![0],
+                                  ),
+                                )),
+                              // NewStoryCard(),
+                              // NewStoryCard(),
+                              // NewStoryCard(),
+                            ],
+                          );
                         },
                       ),
                     ),

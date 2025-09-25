@@ -5,9 +5,7 @@ import '../settings.dart';
 import 'bloc/dark_mode_cubit.dart';
 
 class DarkThemeSection extends StatelessWidget {
-  const DarkThemeSection({
-    super.key,
-  });
+  const DarkThemeSection({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +23,17 @@ class DarkThemeSection extends StatelessWidget {
               ),
               title: const Text('Dark Theme'),
               trailing: Switch(
-                  onChanged: (_) =>
-                      context.read<DarkModeCubit>().toggleDarkMode(),
-                  value: isDarkModeOn),
+                inactiveThumbColor: Theme.of(context).colorScheme.primary,
+                inactiveTrackColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withOpacity(0.5),
+                trackOutlineColor: MaterialStateProperty.all(
+                  Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                ),
+                onChanged: (_) =>
+                    context.read<DarkModeCubit>().toggleDarkMode(),
+                value: isDarkModeOn,
+              ),
             ),
             const Divider(),
           ],

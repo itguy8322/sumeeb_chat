@@ -1,13 +1,14 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers, use_build_context_synchronously
 
 import 'package:flutter/foundation.dart';
-import 'dart:io' show Platform, isWindows;
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/contacts-cubit/contacts_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/contacts-cubit/contacts_state.dart';
+import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_state.dart';
@@ -157,6 +158,7 @@ class _ContactsPageState extends State<ContactsPage> {
                     user: users[i],
                     onTap: (u) async {
                       print("=============== CONNECTING OTHER USER: ${u.id}");
+                      context.read<RecentChatCubit>().resetMessageCount(u.id);
                       context.read<ChatConnectionCubit>().makeConnection(
                         _user.user!,
                         u,

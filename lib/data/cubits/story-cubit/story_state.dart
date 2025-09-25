@@ -1,5 +1,4 @@
 import 'package:sumeeb_chat/data/models/story-model/story_model.dart';
-import 'package:sumeeb_chat/data/models/user/user_model.dart';
 
 class StoryState {
   final Map<String, List<StoryModel>> stories;
@@ -9,7 +8,7 @@ class StoryState {
   final String storyId;
   final String? text;
   final String type;
-  final String? color;
+  final int colorIndex;
   final String? photoUrl;
   final String? videoUrl;
   final String? caption;
@@ -30,7 +29,7 @@ class StoryState {
     required this.storyId,
     required this.type,
     required this.text,
-    required this.color,
+    this.colorIndex = 0,
     required this.photoUrl,
     required this.videoUrl,
     required this.caption,
@@ -52,7 +51,7 @@ class StoryState {
       storyId: '',
       type: '',
       text: '',
-      color: 'blue',
+      colorIndex: 0,
       photoUrl: '',
       videoUrl: '',
       caption: '',
@@ -74,7 +73,7 @@ class StoryState {
       storyId: '',
       type: '',
       text: '',
-      color: 'blue',
+      colorIndex: 0,
       photoUrl: '',
       videoUrl: '',
       caption: '',
@@ -96,7 +95,7 @@ class StoryState {
     String? storyId,
     String? text,
     String? type,
-    String? color,
+    int? colorIndex,
     String? photoUrl,
     String? videoUrl,
     String? caption,
@@ -116,7 +115,7 @@ class StoryState {
       storyId: storyId ?? this.storyId,
       type: type ?? this.type,
       text: text ?? this.text,
-      color: color ?? this.color,
+      colorIndex: colorIndex ?? this.colorIndex,
       photoUrl: photoUrl ?? this.photoUrl,
       videoUrl: videoUrl ?? this.videoUrl,
       caption: caption ?? this.caption,

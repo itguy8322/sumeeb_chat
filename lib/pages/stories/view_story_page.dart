@@ -41,7 +41,8 @@ class ViewStoryPage extends StatelessWidget {
                   ? StoryItem.text(
                       title: stories[index].text ?? '',
                       backgroundColor:
-                          storyColors[stories[index].color] ?? Colors.blue,
+                          storyColors[stories[index].colorIndex!] ??
+                          storyColors[0],
                       duration: const Duration(seconds: 2),
                       textStyle: const TextStyle(fontSize: 34),
                     )

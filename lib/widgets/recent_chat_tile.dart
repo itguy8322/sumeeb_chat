@@ -13,6 +13,7 @@ class RecentChatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("MESSAGE COUNT: ${recentChat.messageCount}");
     return ListTile(
       leading: CircleAvatar(
         child: recentChat.user.profilePhoto != null
@@ -51,6 +52,30 @@ class RecentChatTile extends StatelessWidget {
           Text(recentChat.date.split('.')[0]),
         ],
       ),
+      trailing: recentChat.status == 'sent'
+          ? SizedBox()
+          : recentChat.messageCount != "0"
+          ? Container(
+              // padding: EdgeInsets.all(1),
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.amber,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  recentChat.messageCount,
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            )
+          : SizedBox(),
+
       onTap: () => onTap(recentChat.user),
     );
   }

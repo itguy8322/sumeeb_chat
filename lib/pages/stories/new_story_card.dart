@@ -25,7 +25,7 @@ class NewStoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: story != null
             ? story!.type == 'text'
-                  ? storyColors[story!.color]
+                  ? storyColors[story!.colorIndex!]
                   : Color.fromARGB(255, 7, 0, 41)
             : Color.fromARGB(255, 7, 0, 41),
         borderRadius: BorderRadius.circular(10),

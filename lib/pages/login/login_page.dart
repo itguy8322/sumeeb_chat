@@ -86,7 +86,7 @@ class LoginPage extends StatelessWidget {
                           if (value == null || value.isEmpty) {
                             return "Enter your phone number";
                           } else if (!RegExp(
-                            r'^\+?[0-9]{10,15}$',
+                            r'^\+?[0-9]{10,13}$',
                           ).hasMatch(value)) {
                             return "Enter valid phone (e.g. +2348012345678)";
                           }
@@ -144,11 +144,22 @@ class LoginPage extends StatelessWidget {
                                             TextButton(
                                               onPressed: () async {
                                                 Navigator.pop(context);
+                                                String phoneNumber = '';
+                                                if (_phoneC.text[0] == '0') {
+                                                  phoneNumber = _phoneC.text
+                                                      .replaceFirst(
+                                                        '0',
+                                                        '+234',
+                                                      );
+                                                  _phoneC.text = phoneNumber;
+                                                } else {
+                                                  phoneNumber = _phoneC.text;
+                                                }
+                                                print(phoneNumber);
                                                 await context
                                                     .read<AuthCubit>()
                                                     .login(
-                                                      phone: _phoneC.text
-                                                          .trim(),
+                                                      phone: phoneNumber.trim(),
                                                     );
                                               },
                                               child: Text(

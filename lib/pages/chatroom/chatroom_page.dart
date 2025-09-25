@@ -7,7 +7,8 @@ import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_state.da
 import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
-import 'package:sumeeb_chat/pages/chatroom/view_profile_photo.dart';
+import 'package:sumeeb_chat/pages/chatroom/view_profile_photo.dart'
+    hide Scaffold;
 import 'package:sumeeb_chat/pages/contacts/contacts_page.dart';
 import 'package:sumeeb_chat/pages/home/home_page.dart';
 import 'package:sumeeb_chat/services/stream_service.dart';
@@ -112,6 +113,9 @@ class _ChatroomPageState extends State<ChatroomPage> {
                       appBar: StreamChannelHeader(
                         leading: IconButton(
                           onPressed: () {
+                            context
+                                .read<ChatConnectionCubit>()
+                                .resetConnection();
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -396,12 +400,56 @@ class _ChatroomPageState extends State<ChatroomPage> {
               } else {
                 return Scaffold(
                   appBar: AppBar(
+                    leading: IconButton(
+                      onPressed: () {
+                        context.read<ChatConnectionCubit>().resetConnection();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                HomePage(streamService: widget.streamService),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+                    ),
                     title: Row(
                       children: [
                         CircleAvatar(
-                          child: Text(
-                            other!.name.isNotEmpty ? other.name[0] : '?',
-                          ),
+                          child: other != null
+                              ? other.profilePhoto != null
+                                    ? other.profilePhoto!.isNotEmpty
+                                          ? ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(70),
+                                              child: Image.network(
+                                                other.profilePhoto!,
+                                              ),
+                                            )
+                                          : Text(
+                                              other.name[0],
+                                              style: TextStyle(
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.surface,
+                                              ),
+                                            )
+                                    : Text(
+                                        other.name[0],
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.surface,
+                                        ),
+                                      )
+                              : Text(
+                                  other!.name[0],
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.surface,
+                                  ),
+                                ),
                         ),
                         const SizedBox(width: 8),
                         Column(
@@ -432,7 +480,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
                             spacing: 10,
                             children: [
                               Text(
-                                "Connection error, check internt and try again",
+                                "Connection error, check your internet and try again",
                               ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
@@ -456,7 +504,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                         widget.streamService,
                                       );
                                 },
-                                child: Text("Retry"),
+                                child: Text(
+                                  "Retry",
+                                  style: TextStyle(color: Colors.black),
+                                ),
                               ),
                             ],
                           )

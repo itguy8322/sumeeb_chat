@@ -5,7 +5,7 @@ class StoryModel {
   final String storyId;
   final String type;
   final String? text;
-  final String? color;
+  final int? colorIndex;
   final String? photoUrl;
   final String? videoUrl;
   final String? caption;
@@ -16,7 +16,7 @@ class StoryModel {
     required this.storyId,
     required this.type,
     this.text,
-    this.color,
+    this.colorIndex,
     this.photoUrl,
     this.videoUrl,
     this.caption,
@@ -32,7 +32,7 @@ class StoryModel {
       storyId: json['storyId'],
       type: json['type'],
       text: json['text'],
-      color: json['color'],
+      colorIndex: json['color'],
       photoUrl: json['photoUrl'],
       videoUrl: json['videoUrl'],
       caption: json['caption'],

@@ -27,23 +27,28 @@ const IrecentChatsSchema = CollectionSchema(
       name: r'lastMessage',
       type: IsarType.string,
     ),
-    r'name': PropertySchema(
+    r'messageCount': PropertySchema(
       id: 2,
+      name: r'messageCount',
+      type: IsarType.long,
+    ),
+    r'name': PropertySchema(
+      id: 3,
       name: r'name',
       type: IsarType.string,
     ),
     r'phone': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'phone',
       type: IsarType.string,
     ),
     r'profilePhoto': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'profilePhoto',
       type: IsarType.string,
     ),
     r'status': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'status',
       type: IsarType.string,
     )
@@ -115,10 +120,11 @@ void _irecentChatsSerialize(
 ) {
   writer.writeString(offsets[0], object.date);
   writer.writeString(offsets[1], object.lastMessage);
-  writer.writeString(offsets[2], object.name);
-  writer.writeString(offsets[3], object.phone);
-  writer.writeString(offsets[4], object.profilePhoto);
-  writer.writeString(offsets[5], object.status);
+  writer.writeLong(offsets[2], object.messageCount);
+  writer.writeString(offsets[3], object.name);
+  writer.writeString(offsets[4], object.phone);
+  writer.writeString(offsets[5], object.profilePhoto);
+  writer.writeString(offsets[6], object.status);
 }
 
 IrecentChats _irecentChatsDeserialize(
@@ -132,10 +138,11 @@ IrecentChats _irecentChatsDeserialize(
   );
   object.date = reader.readStringOrNull(offsets[0]);
   object.lastMessage = reader.readStringOrNull(offsets[1]);
-  object.name = reader.readStringOrNull(offsets[2]);
-  object.phone = reader.readStringOrNull(offsets[3]);
-  object.profilePhoto = reader.readStringOrNull(offsets[4]);
-  object.status = reader.readStringOrNull(offsets[5]);
+  object.messageCount = reader.readLong(offsets[2]);
+  object.name = reader.readStringOrNull(offsets[3]);
+  object.phone = reader.readStringOrNull(offsets[4]);
+  object.profilePhoto = reader.readStringOrNull(offsets[5]);
+  object.status = reader.readStringOrNull(offsets[6]);
   return object;
 }
 
@@ -151,12 +158,14 @@ P _irecentChatsDeserializeProp<P>(
     case 1:
       return (reader.readStringOrNull(offset)) as P;
     case 2:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
       return (reader.readStringOrNull(offset)) as P;
     case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -611,6 +620,62 @@ extension IrecentChatsQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'lastMessage',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IrecentChats, IrecentChats, QAfterFilterCondition>
+      messageCountEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'messageCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IrecentChats, IrecentChats, QAfterFilterCondition>
+      messageCountGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'messageCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IrecentChats, IrecentChats, QAfterFilterCondition>
+      messageCountLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'messageCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IrecentChats, IrecentChats, QAfterFilterCondition>
+      messageCountBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'messageCount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -1259,6 +1324,19 @@ extension IrecentChatsQuerySortBy
     });
   }
 
+  QueryBuilder<IrecentChats, IrecentChats, QAfterSortBy> sortByMessageCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'messageCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IrecentChats, IrecentChats, QAfterSortBy>
+      sortByMessageCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'messageCount', Sort.desc);
+    });
+  }
+
   QueryBuilder<IrecentChats, IrecentChats, QAfterSortBy> sortByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1348,6 +1426,19 @@ extension IrecentChatsQuerySortThenBy
     });
   }
 
+  QueryBuilder<IrecentChats, IrecentChats, QAfterSortBy> thenByMessageCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'messageCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IrecentChats, IrecentChats, QAfterSortBy>
+      thenByMessageCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'messageCount', Sort.desc);
+    });
+  }
+
   QueryBuilder<IrecentChats, IrecentChats, QAfterSortBy> thenByName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'name', Sort.asc);
@@ -1414,6 +1505,12 @@ extension IrecentChatsQueryWhereDistinct
     });
   }
 
+  QueryBuilder<IrecentChats, IrecentChats, QDistinct> distinctByMessageCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'messageCount');
+    });
+  }
+
   QueryBuilder<IrecentChats, IrecentChats, QDistinct> distinctByName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1460,6 +1557,12 @@ extension IrecentChatsQueryProperty
   QueryBuilder<IrecentChats, String?, QQueryOperations> lastMessageProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastMessage');
+    });
+  }
+
+  QueryBuilder<IrecentChats, int, QQueryOperations> messageCountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'messageCount');
     });
   }
 

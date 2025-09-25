@@ -5,23 +5,60 @@ import 'dart:async';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/contacts-cubit/contacts_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dart';
+import 'package:sumeeb_chat/data/isar-models/irecent-chats/irecent_chats.dart';
 
 @pragma('vm:entry-point')
-Future<void> firebaseMessagingBackgroundHandler(
-  RemoteMessage message,
-  Isar isar,
-) async {
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("====== Background Push Received ======");
   // final data = message.data;
+  final data = message.data;
+  String title = '';
+  String body = '';
+  final lastMessage = data['body'];
+  final userId = data['title'].toString().replaceFirst('New message from ', '');
+  print("################## USER ID: $userId ##################");
+
+  final id = "+$userId";
+
+  print("User not found in contacts, using userId as phone");
+
+  body = lastMessage;
+
+  final dir = await getApplicationDocumentsDirectory();
+  final isar = await Isar.open(
+    [IrecentChatsSchema], // only this one if you just update recent chats
+    directory: dir.path,
+    inspector: false,
+  );
+  await isar.writeTxn(() async {
+    final existing = await isar.irecentChats.get(int.parse(userId));
+    if (existing != null) {
+      title = "You got a message from ${existing.name ?? userId}";
+      existing.lastMessage = lastMessage;
+      existing.messageCount += 1;
+      await isar.irecentChats.put(existing);
+    } else {
+      title = "You got a message from $userId";
+      await isar.irecentChats.put(
+        IrecentChats(id: int.parse(userId))
+          ..id = userId.hashCode
+          ..phone = id
+          ..lastMessage = lastMessage
+          ..messageCount = 1,
+      );
+    }
+  });
   AwesomeNotifications().createNotification(
     content: NotificationContent(
       id: DateTime.now().millisecond.remainder(100000),
       channelKey: 'basic_channel',
       icon: 'resource://drawable/ic_stat_notify',
-      title: message.notification?.title ?? "New message",
-      body: message.notification?.body ?? "You got a message",
+      title: title,
+      body: body,
     ),
   );
   print("====== Background Push Received ======");
@@ -35,6 +72,7 @@ class PushNotificationService {
   static void initialize(
     RecentChatCubit recentChatCubit,
     ContactsCubit contacts,
+    ChatConnectionCubit connection,
     Isar isar,
     // UserDataCubit userDataCubit,
     // NotificationListCubit notificationCubit,
@@ -56,9 +94,7 @@ class PushNotificationService {
       }
     }
     _subscription?.cancel();
-    FirebaseMessaging.onBackgroundMessage((message) {
-      return firebaseMessagingBackgroundHandler(message, isar);
-    });
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     _subscription = FirebaseMessaging.onMessage.listen((
       RemoteMessage message,
     ) async {
@@ -75,6 +111,7 @@ class PushNotificationService {
       final data = message.data;
       String title = '';
       String body = '';
+      bool userState = false;
       final lastMessage = data['body'];
       final userId = data['title'].toString().replaceFirst(
         'New message from ',
@@ -82,10 +119,11 @@ class PushNotificationService {
       );
       print("################## USER ID: $userId ##################");
       final mappedContacts = contacts.state.mappedContacts;
+      final id = "+$userId";
       print("##### MAPPED CONTACTS: $mappedContacts");
-      if (mappedContacts.containsKey(userId)) {
+      if (mappedContacts.containsKey(id)) {
         print("User found in contacts");
-        final contact = mappedContacts[userId]!;
+        final contact = mappedContacts[id]!;
         title = "You got a message from ${contact.name}";
         body = lastMessage;
       } else {
@@ -93,20 +131,36 @@ class PushNotificationService {
         title = "You got a message from $userId";
         body = lastMessage;
       }
-      recentChatCubit.addChatToHistoryFromNotification(userId, lastMessage);
+
+      if (connection.state.otherUser != null) {
+        print("########## CHECKING USER STATE IS CURRENT ##########");
+        print(connection.state.otherUser!.id);
+        print(userId);
+        print("########## CHECKING USER STATE IS CURRENT ##########");
+        userState = connection.state.otherUser!.id == id;
+        print("########## NEW USER STATE: $userState");
+      }
+
+      print("########## USER STATE: $userState");
+      recentChatCubit.addChatToHistoryFromNotification(
+        userId,
+        lastMessage,
+        userState,
+      );
 
       print("############### NOTIFICATIOM ################");
-
-      AwesomeNotifications().createNotification(
-        content: NotificationContent(
-          id: DateTime.now().millisecond.remainder(100000),
-          channelKey: 'basic_channel',
-          // bigPicture: 'asset://assets/icon/icon.png',
-          icon: 'resource://drawable/ic_stat_notify',
-          title: title,
-          body: body,
-        ),
-      );
+      if (!userState) {
+        AwesomeNotifications().createNotification(
+          content: NotificationContent(
+            id: DateTime.now().millisecond.remainder(100000),
+            channelKey: 'basic_channel',
+            // bigPicture: 'asset://assets/icon/icon.png',
+            icon: 'resource://drawable/ic_stat_notify',
+            title: title,
+            body: body,
+          ),
+        );
+      }
     });
     print("<========= Initialized Push Notification ===========>");
   }

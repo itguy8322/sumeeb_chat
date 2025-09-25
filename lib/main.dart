@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
@@ -37,7 +38,9 @@ import 'package:awesome_notifications/awesome_notifications.dart';
 late Isar isar;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp, // normal portrait
+  ]);
   if (Platform.isWindows) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(
@@ -99,8 +102,14 @@ void main() async {
   // }
   final recentChatCubit = RecentChatCubit(isar, firestoreRepo);
   final contacts = ContactsCubit(firestoreRepo, isar);
+  final chatConnection = ChatConnectionCubit();
   final streamService = StreamService();
-  PushNotificationService.initialize(recentChatCubit, contacts, isar);
+  PushNotificationService.initialize(
+    recentChatCubit,
+    contacts,
+    chatConnection,
+    isar,
+  );
   runApp(
     MultiBlocProvider(
       providers: [
@@ -118,7 +127,7 @@ void main() async {
         BlocProvider(
           create: (_) => StoryCubit(firestoreRepo, isar, fileUploadRepo),
         ),
-        BlocProvider(create: (_) => ChatConnectionCubit()),
+        BlocProvider(create: (_) => chatConnection),
         BlocProvider(create: (_) => recentChatCubit..getRecentChats()),
       ],
       child: MyApp(streamService: streamService),
