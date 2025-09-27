@@ -8,6 +8,8 @@ import 'package:sumeeb_chat/data/cubits/basic-info/basic_info_state.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
 import 'package:sumeeb_chat/data/models/user/user_model.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 
 class ViewProfilePhoto extends StatelessWidget {
   final AppUser user;
@@ -43,6 +45,27 @@ class ViewProfilePhoto extends StatelessWidget {
                 }
                 return Stack(
                   children: [
+                    BlocListener<BasicInfoCubit, BasicInfoState>(
+                      listener: (context, state) {
+                        if (state.uploadingPhotonFailure) {
+                          showTopSnackBar(
+                            Overlay.of(context),
+                            CustomSnackBar.error(
+                              message: "Failed to upload photo",
+                            ),
+                          );
+                        } else if (state.loadingSuccess) {
+                          showTopSnackBar(
+                            Overlay.of(context),
+                            CustomSnackBar.success(
+                              message: "Photo updated successfully",
+                            ),
+                          );
+                          context.read<UserCubit>().loadUser(user.id);
+                        }
+                      },
+                      child: SizedBox(),
+                    ),
                     Center(
                       child: user.profilePhoto == null
                           ? info.profilePhoto == null
@@ -61,7 +84,7 @@ class ViewProfilePhoto extends StatelessWidget {
                                 : Image.network(info.profilePhoto!)
                           : Image.network(user.profilePhoto!),
                     ),
-                    info.uploadingPhotonInProgress
+                    info.uploadingPhotonInProgress || info.loadingInProgress
                         ? Center(child: CircularProgressIndicator())
                         : SizedBox(),
                     Positioned(
@@ -82,7 +105,11 @@ class ViewProfilePhoto extends StatelessWidget {
                               ),
                             ),
 
-                            onPressed: () {},
+                            onPressed: () {
+                              context.read<BasicInfoCubit>().removeProfilePhoto(
+                                user.id,
+                              );
+                            },
                             label: Text(
                               "Remove",
                               style: TextStyle(color: Colors.black),

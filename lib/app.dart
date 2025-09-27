@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sumeeb_chat/pages/login/login_page.dart';
 import 'package:sumeeb_chat/pages/splash-screen/splashscreen.dart';
 import 'package:sumeeb_chat/services/stream_service.dart';
 import 'package:sumeeb_chat/styles/color_schemes.dart';

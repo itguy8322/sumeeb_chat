@@ -67,7 +67,14 @@ class _ChatroomPageState extends State<ChatroomPage> {
             builder: (context, state) {
               if (state.channel != null) {
                 return StreamChannel(
-                  channel: state.channel!,
+                  channel:
+                      state.channel ??
+                      Channel(
+                        widget.streamService.client,
+                        'messaging',
+                        '',
+                        extraData: {},
+                      ),
                   child: StreamChatTheme(
                     data: StreamChatThemeData(
                       otherMessageTheme: StreamMessageThemeData(
@@ -131,9 +138,9 @@ class _ChatroomPageState extends State<ChatroomPage> {
                         title: Row(
                           children: [
                             Text(
-                              other!.disPlayName.isNotEmpty
-                                  ? other.disPlayName
-                                  : other.name,
+                              other != null && other.name.isNotEmpty
+                                  ? other.name
+                                  : 'Unknown',
                             ),
                           ],
                         ),
@@ -150,6 +157,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
                         actions: [
                           InkWell(
                             onTap: () {
+                              if (other == null) return;
                               if (Platform.isWindows) {
                                 context
                                     .read<SiderManagerCubit>()
@@ -167,16 +175,24 @@ class _ChatroomPageState extends State<ChatroomPage> {
                               }
                             },
                             child: CircleAvatar(
-                              child: other.profilePhoto != null
-                                  ? other.profilePhoto!.isNotEmpty
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              70,
-                                            ),
-                                            child: Image.network(
-                                              other.profilePhoto!,
-                                            ),
-                                          )
+                              child: other != null
+                                  ? other.profilePhoto != null
+                                        ? other.profilePhoto!.isNotEmpty
+                                              ? ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(70),
+                                                  child: Image.network(
+                                                    other.profilePhoto!,
+                                                  ),
+                                                )
+                                              : Text(
+                                                  other.name[0],
+                                                  style: TextStyle(
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).colorScheme.surface,
+                                                  ),
+                                                )
                                         : Text(
                                             other.name[0],
                                             style: TextStyle(
@@ -186,7 +202,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                             ),
                                           )
                                   : Text(
-                                      other.name[0],
+                                      'Unknown',
                                       style: TextStyle(
                                         color: Theme.of(
                                           context,
@@ -221,21 +237,30 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                               child: CircleAvatar(
                                                 radius: 18,
 
-                                                child:
-                                                    other.profilePhoto != null
-                                                    ? other
-                                                              .profilePhoto!
-                                                              .isNotEmpty
-                                                          ? ClipRRect(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    70,
-                                                                  ),
-                                                              child: Image.network(
-                                                                other
-                                                                    .profilePhoto!,
-                                                              ),
-                                                            )
+                                                child: other != null
+                                                    ? other.profilePhoto != null
+                                                          ? other
+                                                                    .profilePhoto!
+                                                                    .isNotEmpty
+                                                                ? ClipRRect(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                          70,
+                                                                        ),
+                                                                    child: Image.network(
+                                                                      other
+                                                                          .profilePhoto!,
+                                                                    ),
+                                                                  )
+                                                                : Text(
+                                                                    other
+                                                                        .name[0],
+                                                                    style: TextStyle(
+                                                                      color: Theme.of(
+                                                                        context,
+                                                                      ).colorScheme.surface,
+                                                                    ),
+                                                                  )
                                                           : Text(
                                                               other.name[0],
                                                               style: TextStyle(
@@ -245,7 +270,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                                               ),
                                                             )
                                                     : Text(
-                                                        other.name[0],
+                                                        'Unknown',
                                                         style: TextStyle(
                                                           color: Theme.of(
                                                             context,
@@ -332,7 +357,9 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                           ),
 
                                           onSubmitted: (text) async {
-                                            if (text.trim().isEmpty) return;
+                                            if (text.trim().isEmpty ||
+                                                other == null)
+                                              return;
 
                                             context
                                                 .read<RecentChatCubit>()
@@ -359,7 +386,9 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                         onPressed: () async {
                                           final text = _messageController.text
                                               .trim();
-                                          if (text.isEmpty) return;
+                                          if (text.isEmpty || other == null) {
+                                            return;
+                                          }
                                           context
                                               .read<RecentChatCubit>()
                                               .addChatToHistory(other, text);
@@ -413,66 +442,22 @@ class _ChatroomPageState extends State<ChatroomPage> {
                       },
                       icon: Icon(Icons.arrow_back_ios, color: Colors.white),
                     ),
-                    title: Row(
-                      children: [
-                        CircleAvatar(
-                          child: other != null
-                              ? other.profilePhoto != null
-                                    ? other.profilePhoto!.isNotEmpty
-                                          ? ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(70),
-                                              child: Image.network(
-                                                other.profilePhoto!,
-                                              ),
-                                            )
-                                          : Text(
-                                              other.name[0],
-                                              style: TextStyle(
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.surface,
-                                              ),
-                                            )
-                                    : Text(
-                                        other.name[0],
-                                        style: TextStyle(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.surface,
-                                        ),
-                                      )
-                              : Text(
-                                  other!.name[0],
-                                  style: TextStyle(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.surface,
-                                  ),
-                                ),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              other.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              other.phone ?? '',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    title: Text("Sumeeb Chat"),
                   ),
                   body: Center(
                     child: state.conectingInProgress
-                        ? CircularProgressIndicator(color: Colors.white)
+                        ? Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(strokeWidth: 3.0),
+                              SizedBox(height: 10),
+                              Text(
+                                "Loading messages...",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ],
+                          )
                         : state.connectingFailure
                         ? Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -496,13 +481,15 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                   ),
                                 ),
                                 onPressed: () {
-                                  context
-                                      .read<ChatConnectionCubit>()
-                                      .makeConnection(
-                                        currentUser,
-                                        other,
-                                        widget.streamService,
-                                      );
+                                  if (other != null) {
+                                    context
+                                        .read<ChatConnectionCubit>()
+                                        .makeConnection(
+                                          currentUser,
+                                          other,
+                                          widget.streamService,
+                                        );
+                                  }
                                 },
                                 child: Text(
                                   "Retry",

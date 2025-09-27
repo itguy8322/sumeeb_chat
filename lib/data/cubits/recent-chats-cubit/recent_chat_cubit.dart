@@ -15,6 +15,21 @@ class RecentChatCubit extends Cubit<RecentChatState> {
   //   Future<void> addUser() async {
 
   // }
+  setUnreadMessageToTrue() {
+    emit(state.copyWith(hasUnreadMessages: true));
+  }
+
+  setUnreadMessageToFalse() async {
+    bool? hasUnread = false;
+    final users = await isar.irecentChats.where().findAll();
+    for (IrecentChats user in users) {
+      if (user.messageCount > 0) {
+        hasUnread = true;
+        break;
+      }
+    }
+    emit(state.copyWith(hasUnreadMessages: hasUnread));
+  }
 
   addChatToHistory(AppUser user, String message) async {
     print("============= ADDING HISTORY =============");
@@ -113,11 +128,15 @@ class RecentChatCubit extends Cubit<RecentChatState> {
   getRecentChats() async {
     final users = await isar.irecentChats.where().findAll();
     List<RecentChatModel> recentChats = [];
-
+    bool hasUnread = false;
     // final updatedProfiles = {for (var b in _users) b.id: b.profilePhoto};
     for (IrecentChats user in users) {
       print(">>>>>>>>>>>> UPDATED DPS: ${user.id}");
       try {
+        if (user.messageCount > 0) {
+          hasUnread = true;
+        }
+
         final _user = await firestore.getData("+${user.id}");
         if (_user != null) {
           final appUser = AppUser(
@@ -131,11 +150,11 @@ class RecentChatCubit extends Cubit<RecentChatState> {
             user: appUser,
             message: user.lastMessage!,
             messageCount: "${user.messageCount}",
-            date: user.date!,
-            status: user.status!,
+            date: user.date ?? '',
+            status: user.status ?? 'received',
           );
           recentChats.add(recentChat);
-          updateChatToHistory(appUser, user.lastMessage!, user.date!);
+          updateChatToHistory(appUser, user.lastMessage!, user.date ?? '');
         }
       } catch (e) {
         print(
@@ -158,11 +177,13 @@ class RecentChatCubit extends Cubit<RecentChatState> {
       }
     }
 
-    emit(state.copyWith(recentChats: recentChats));
+    emit(
+      state.copyWith(recentChats: recentChats, hasUnreadMessages: hasUnread),
+    );
     print("---=====================${state.recentChats}");
   }
 
-  resetMessageCount(String id) async {
+  Future<void> resetMessageCount(String id) async {
     final recentChatUser = await isar.irecentChats.get(int.parse(id));
     if (recentChatUser != null) {
       print("============= RESETTING MESSAGE COUNT =============");

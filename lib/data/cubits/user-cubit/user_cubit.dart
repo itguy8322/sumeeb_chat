@@ -17,9 +17,8 @@ class UserCubit extends Cubit<UserState> {
   }
 
   setUuser(AppUser user) {
-    print("################ ############## ######################");
-    print("############### SETTING NEW USER #####################");
-    print("################ ############## ######################");
     emit(state.copyWith(user: user));
   }
+
+  removeProfilePhoto() {}
 }

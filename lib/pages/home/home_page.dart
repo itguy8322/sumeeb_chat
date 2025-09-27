@@ -1,12 +1,14 @@
 //
-// ignore_for_file: library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 
 import 'dart:io';
 import 'dart:ui';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sumeeb_chat/data/cubits/contacts-cubit/contacts_cubit.dart';
+import 'package:sumeeb_chat/data/cubits/contacts-cubit/contacts_state.dart';
 import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sidebar_manager_state.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
@@ -36,9 +38,69 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int selected = 0;
+  bool isListening = false;
+  Stream<QuerySnapshot<Map<String, dynamic>>> prepareListenForStoryUpdates(
+    List<String> contactIds,
+  ) {
+    final stream = FirebaseFirestore.instance
+        .collection('stories')
+        .where(
+          'userId',
+          whereIn: contactIds,
+        ) // 👈 only my contacts// 👈 only new posts
+        .snapshots();
+    return stream;
+  }
+
+  startListening(BuildContext context) {
+    final contactIds = context
+        .read<ContactsCubit>()
+        .state
+        .mappedContacts
+        .keys
+        .toList();
+    print("%%%%%%%%%%%%%%%%%%%%%%%% $contactIds %%%%%%%%%%%%%%%%%%%%%%%%");
+    final stream = prepareListenForStoryUpdates(contactIds);
+    setState(() {
+      isListening = true;
+    });
+    stream.listen((snapshot) {
+      if (snapshot.docs.isNotEmpty) {
+        // at least one new story from contacts
+        context.read<StoryCubit>().setNewStoryUpdateToTrue();
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // This will be triggered when app state changes
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      // App is back from minimized (foreground again)
+      print("///////////////// App Resumed /////////////////");
+      context.read<RecentChatCubit>().getRecentChats();
+    } else if (state == AppLifecycleState.paused) {
+      // App is minimized (background)
+      // _onAppPaused();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,127 +109,137 @@ class _HomePageState extends State<HomePage> {
     return BlocBuilder<UserCubit, UserState>(
       builder: (context, state) {
         context.read<StoryCubit>().loadStories(contacts, state.user!);
-        return Platform.isWindows
-            ? Builder(
-                builder: (context) {
-                  return Row(
-                    children: [
-                      SizedBox(
-                        width: 380,
-                        child: Stack(
-                          children: [
-                            Builder(
-                              builder: (context) {
-                                if (selected == 0) {
-                                  return ChatsPage(
-                                    streamService: widget.streamService,
-                                  );
-                                } else if (selected == 1) {
-                                  // Replace with your actual screen for index 1
-                                  return ContactsPage(
-                                    streamService: widget.streamService,
-                                  );
-                                } else if (selected == 2) {
-                                  // Replace with your actual screen for index 2
-                                  return StoriesPage();
-                                } else {
-                                  return SettingsPage();
-                                }
-                              },
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              left: 0,
-                              child: BlurBottomNavBar(
-                                currentUser: state.user!,
-                                width: 75,
-                                onSelected: (index) {
-                                  setState(() {
-                                    selected = index;
-                                  });
+        return BlocListener<ContactsCubit, ContactsState>(
+          listener: (context, s) {
+            if (s.loadingSuccess && !isListening) {
+              startListening(context);
+            }
+          },
+          child: Platform.isWindows
+              ? Builder(
+                  builder: (context) {
+                    return Row(
+                      children: [
+                        SizedBox(
+                          width: 380,
+                          child: Stack(
+                            children: [
+                              Builder(
+                                builder: (context) {
+                                  if (selected == 0) {
+                                    return ChatsPage(
+                                      streamService: widget.streamService,
+                                    );
+                                  } else if (selected == 1) {
+                                    // Replace with your actual screen for index 1
+                                    return ContactsPage(
+                                      streamService: widget.streamService,
+                                    );
+                                  } else if (selected == 2) {
+                                    // Replace with your actual screen for index 2
+                                    return StoriesPage();
+                                  } else {
+                                    return SettingsPage();
+                                  }
                                 },
                               ),
-                            ),
-                          ],
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                left: 0,
+                                child: BlurBottomNavBar(
+                                  currentUser: state.user!,
+                                  width: 75,
+                                  onSelected: (index) {
+                                    setState(() {
+                                      selected = index;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Container(
-                        height: MediaQuery.of(context).size.height,
-                        width: 3,
-                        color: Colors.amber,
-                      ),
-                      Expanded(
-                        child:
-                            BlocBuilder<SiderManagerCubit, SidebarManagerState>(
-                              builder: (context, sm) {
-                                if (sm.page == PageType.chatroom) {
-                                  return ChatroomPage(
-                                    streamService: widget.streamService,
-                                  );
-                                } else if (sm.page == PageType.status) {
-                                  return ViewStoryPage(
-                                    user: sm.user!,
-                                    userId: sm.userId,
-                                    stories: sm.stories!,
-                                  );
-                                } else if (sm.page == PageType.contacts) {
-                                  return ContactsPage(
-                                    streamService: widget.streamService,
-                                  );
-                                } else if (sm.page == PageType.textStory) {
-                                  return TextStoryForm(user: sm.user!);
-                                } else if (sm.page == PageType.mediaStory) {
-                                  return MediaStoryForm(user: sm.user!);
-                                } else if (sm.page ==
-                                    PageType.viewProfilePhoto) {
-                                  return ViewProfilePhoto(
-                                    user: sm.user!,
-                                    isMe: sm.isMe,
-                                  );
-                                }
-                                return DesktopDefaultPage();
-                              },
-                            ),
-                      ),
-                    ],
-                  );
-                },
-              )
-            : Stack(
-                children: [
-                  Builder(
-                    builder: (context) {
-                      if (selected == 0) {
-                        return ChatsPage(streamService: widget.streamService);
-                      } else if (selected == 1) {
-                        // Replace with your actual screen for index 1
-                        return ContactsPage(
-                          streamService: widget.streamService,
-                        );
-                      } else if (selected == 2) {
-                        // Replace with your actual screen for index 2
-                        return StoriesPage();
-                      } else {
-                        return SettingsPage();
-                      }
-                    },
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    left: 0,
-                    child: BlurBottomNavBar(
-                      currentUser: state.user!,
-                      onSelected: (index) {
-                        setState(() {
-                          selected = index;
-                        });
+                        Container(
+                          height: MediaQuery.of(context).size.height,
+                          width: 3,
+                          color: Colors.amber,
+                        ),
+                        Expanded(
+                          child:
+                              BlocBuilder<
+                                SiderManagerCubit,
+                                SidebarManagerState
+                              >(
+                                builder: (context, sm) {
+                                  if (sm.page == PageType.chatroom) {
+                                    return ChatroomPage(
+                                      streamService: widget.streamService,
+                                    );
+                                  } else if (sm.page == PageType.status) {
+                                    return ViewStoryPage(
+                                      user: sm.user!,
+                                      userId: sm.userId,
+                                      stories: sm.stories!,
+                                    );
+                                  } else if (sm.page == PageType.contacts) {
+                                    return ContactsPage(
+                                      streamService: widget.streamService,
+                                    );
+                                  } else if (sm.page == PageType.textStory) {
+                                    return TextStoryForm(user: sm.user!);
+                                  } else if (sm.page == PageType.mediaStory) {
+                                    return MediaStoryForm(user: sm.user!);
+                                  } else if (sm.page ==
+                                      PageType.viewProfilePhoto) {
+                                    return ViewProfilePhoto(
+                                      user: sm.user!,
+                                      isMe: sm.isMe,
+                                    );
+                                  }
+                                  return DesktopDefaultPage();
+                                },
+                              ),
+                        ),
+                      ],
+                    );
+                  },
+                )
+              : Stack(
+                  children: [
+                    Builder(
+                      builder: (context) {
+                        if (selected == 0) {
+                          return ChatsPage(streamService: widget.streamService);
+                        } else if (selected == 1) {
+                          // Replace with your actual screen for index 1
+                          return ContactsPage(
+                            streamService: widget.streamService,
+                          );
+                        } else if (selected == 2) {
+                          // Replace with your actual screen for index 2
+                          return StoriesPage();
+                        } else {
+                          return SettingsPage();
+                        }
                       },
                     ),
-                  ),
-                ],
-              );
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      left: 0,
+                      child: BlurBottomNavBar(
+                        currentUser: state.user!,
+                        onSelected: (index) {
+                          setState(() {
+                            selected = index;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+        );
       },
     );
   }
@@ -250,6 +322,7 @@ class _BlurBottomNavBarState extends State<BlurBottomNavBar> {
                   width: widget.width,
                   onTap: (currentIndex) {
                     _onItemTapped(currentIndex);
+                    context.read<StoryCubit>().setNewStoryUpdateToFalse();
                     final contacts = context
                         .read<ContactsCubit>()
                         .state

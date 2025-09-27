@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sumeeb_chat/data/cubits/basic-info/basic_info_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/contacts-cubit/contacts_cubit.dart';
+import 'package:sumeeb_chat/data/cubits/otp-verification-cubit/otp_verification_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/storage/storage_cubit.dart';
@@ -20,6 +21,8 @@ import 'package:sumeeb_chat/data/isar-models/irecent-chats/irecent_chats.dart';
 import 'package:sumeeb_chat/data/isar-models/user/iuser.dart';
 import 'package:sumeeb_chat/data/isar-models/viewed-story/iviewed_story.dart';
 import 'package:sumeeb_chat/data/repositories/file_upload_repository.dart/file_upload_repository.dart';
+import 'package:sumeeb_chat/data/repositories/fireauth/fireauth_repository.dart';
+import 'package:sumeeb_chat/pages/login/otp_verification_page.dart';
 import 'package:sumeeb_chat/pages/settings/dark-mode/bloc/dark_mode_cubit.dart';
 import 'package:sumeeb_chat/pages/settings/notifications/bloc/notification_cubit.dart';
 import 'package:sumeeb_chat/services/push_notification_service.dart';
@@ -77,6 +80,7 @@ void main() async {
 
   final firestoreRepo = FirestoreRepository();
   final fileUploadRepo = FileUploadRepository();
+  final auth = FireauthRepository();
   AwesomeNotifications().initialize('resource://drawable/launcher_icon', [
     NotificationChannel(
       channelKey: 'basic_channel',
@@ -120,6 +124,7 @@ void main() async {
         BlocProvider(create: (_) => SiderManagerCubit()),
         BlocProvider(create: (_) => ViewStoryCubit()),
         BlocProvider(create: (_) => UserCubit(firestoreRepo)),
+        BlocProvider(create: (_) => OtpVerificationCubit(auth)),
         BlocProvider(create: (_) => NotificationsPreferenceCubit()),
         BlocProvider(
           create: (_) => BasicInfoCubit(firestoreRepo, fileUploadRepo),

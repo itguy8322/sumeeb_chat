@@ -1,6 +1,12 @@
 // ignore_for_file: prefer_if_null_operators
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dart';
+import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_state.dart';
+import 'package:sumeeb_chat/data/cubits/storage/storage_state.dart';
+import 'package:sumeeb_chat/data/cubits/story-cubit/story_cubit.dart';
+import 'package:sumeeb_chat/data/cubits/story-cubit/story_state.dart';
 
 class BottomNavigationItem extends StatelessWidget {
   final IconData icon;
@@ -48,7 +54,32 @@ class BottomNavigationItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 spacing: 10,
                 children: [
-                  Center(child: Icon(icon)),
+                  Center(
+                    child: BlocBuilder<StoryCubit, StoryState>(
+                      builder: (context, story) {
+                        return BlocBuilder<RecentChatCubit, RecentChatState>(
+                          builder: (context, state) {
+                            if (footer == 'Chats' && state.hasUnreadMessages) {
+                              return Badge(
+                                largeSize: 80,
+                                backgroundColor: Colors.red,
+                                child: Icon(icon),
+                              );
+                            } else if (footer == 'Stories' &&
+                                story.hasNewStory) {
+                              return Badge(
+                                largeSize: 80,
+                                backgroundColor: Colors.red,
+                                child: Icon(icon),
+                              );
+                            } else {
+                              return Icon(icon);
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ),
                   Text(footer),
                 ],
               ),

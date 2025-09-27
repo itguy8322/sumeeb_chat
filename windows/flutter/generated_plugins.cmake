@@ -9,11 +9,11 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   emoji_picker_flutter
   file_selector_windows
+  firebase_auth
   firebase_core
   flutter_secure_storage_windows
   gal
   isar_flutter_libs
-  media_kit_libs_windows_video
   media_kit_video
   permission_handler_windows
   record_windows

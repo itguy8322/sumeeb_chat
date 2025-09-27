@@ -25,29 +25,28 @@ class _ChatsPageState extends State<ChatsPage> {
   @override
   void initState() {
     super.initState();
-    _ensureStreamConnected();
+    // _ensureStreamConnected();
     // _fetchPhoneContacts();
   }
 
-  Future<void> _ensureStreamConnected() async {
-    final user = context.read<UserCubit>().state.user!;
-    print("=============== CONNECTING USER: ${user.id}");
-    try {
-      final streamService = context
-          .read<ChatConnectionCubit>()
-          .state
-          .streamService;
-      await streamService!.connectUser(formatUserId(user.id), user.name);
-    } catch (e) {
-      // handle
-      print('Stream connect error: $e');
-    }
-  }
-
-  String formatUserId(String phoneNumber) {
-    // remove '+' and any non-allowed characters
-    return phoneNumber.replaceAll(RegExp(r'[^a-z0-9@_-]'), '');
-  }
+  // Future<void> _ensureStreamConnected() async {
+  //   final user = context.read<UserCubit>().state.user!;
+  //   print("===============@ @ CONNECTING USER: ${user.id}");
+  //   try {
+  //     final streamService = context
+  //         .read<ChatConnectionCubit>()
+  //         .state
+  //         .streamService;
+  //     if (streamService == null) {
+  //       print("Stream service is null, cannot connect");
+  //       return;
+  //     }
+  //     await streamService.connectUser(formatUserId(user.id), user.name);
+  //   } catch (e) {
+  //     // handle
+  //     print('Stream connect error: $e');
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -106,14 +105,18 @@ class _ChatsPageState extends State<ChatsPage> {
                           print(
                             "=============== CONNECTING OTHER USER: ${u.id}",
                           );
-                          context.read<RecentChatCubit>().resetMessageCount(
-                            u.id,
-                          );
+
                           context.read<ChatConnectionCubit>().makeConnection(
                             user!,
                             u,
                             widget.streamService,
                           );
+                          await context
+                              .read<RecentChatCubit>()
+                              .resetMessageCount(u.id);
+                          context
+                              .read<RecentChatCubit>()
+                              .setUnreadMessageToFalse();
                           if (Platform.isWindows) {
                             context
                                 .read<SiderManagerCubit>()

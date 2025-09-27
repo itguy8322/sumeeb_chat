@@ -57,6 +57,21 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
+  Future<void> _ensureStreamConnected(AppUser user) async {
+    print("=============== SPLASH SCREEN @ @ CONNECTING USER: ${user.id}");
+    try {
+      await widget.streamService.connectUser(formatUserId(user.id), user.name);
+    } catch (e) {
+      // handle
+      print('Stream connect error: $e');
+    }
+  }
+
+  String formatUserId(String phoneNumber) {
+    // remove '+' and any non-allowed characters
+    return phoneNumber.replaceAll(RegExp(r'[^a-z0-9@_-]'), '');
+  }
+
   @override
   Widget build(BuildContext context) {
     // final loginCubit = BlocProvider.of<AuthCubit>(context);
@@ -101,6 +116,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       MaterialPageRoute(builder: (context) => LoginPage()),
                     );
                   } else if (state is AuthAuthenticated) {
+                    _ensureStreamConnected(state.user);
                     context.read<UserCubit>().setUuser(state.user);
                     if (state.user.name.isNotEmpty) {
                       context.read<ChatConnectionCubit>().setStreamService(
@@ -129,7 +145,7 @@ class _SplashScreenState extends State<SplashScreen> {
             child: Center(
               child: Column(
                 children: [
-                  CircularProgressIndicator(strokeWidth: 10.0),
+                  CircularProgressIndicator(strokeWidth: 6.0),
                   SizedBox(height: 10),
                   Text("Initializing app...", style: TextStyle(fontSize: 20)),
                 ],

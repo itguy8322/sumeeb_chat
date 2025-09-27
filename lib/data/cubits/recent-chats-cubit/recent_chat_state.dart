@@ -3,12 +3,19 @@ import 'package:sumeeb_chat/data/models/user/user_model.dart';
 
 class RecentChatState {
   final List<RecentChatModel> recentChats;
-  RecentChatState({required this.recentChats});
+  final bool hasUnreadMessages;
+  RecentChatState({required this.recentChats, required this.hasUnreadMessages});
 
   factory RecentChatState.initial() {
-    return RecentChatState(recentChats: []);
+    return RecentChatState(recentChats: [], hasUnreadMessages: false);
   }
-  RecentChatState copyWith({List<RecentChatModel>? recentChats}) {
-    return RecentChatState(recentChats: recentChats ?? this.recentChats);
+  RecentChatState copyWith({
+    List<RecentChatModel>? recentChats,
+    bool? hasUnreadMessages,
+  }) {
+    return RecentChatState(
+      recentChats: recentChats ?? this.recentChats,
+      hasUnreadMessages: hasUnreadMessages ?? this.hasUnreadMessages,
+    );
   }
 }

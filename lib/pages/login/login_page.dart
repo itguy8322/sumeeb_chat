@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sumeeb_chat/data/cubits/otp-verification-cubit/otp_verification_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/storage/storage_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
 import 'package:sumeeb_chat/pages/login/other_info_step.dart';
+import 'package:sumeeb_chat/pages/login/otp_verification_page.dart';
 import '../../data/cubits/auth_cubit.dart';
 
 class LoginPage extends StatelessWidget {
@@ -161,6 +163,18 @@ class LoginPage extends StatelessWidget {
                                                     .login(
                                                       phone: phoneNumber.trim(),
                                                     );
+                                                // context
+                                                //     .read<
+                                                //       OtpVerificationCubit
+                                                //     >()
+                                                //     .sendOtp(phoneNumber);
+                                                // Navigator.push(
+                                                //   context,
+                                                //   MaterialPageRoute(
+                                                //     builder: (context) =>
+                                                //         OtpVerificationPage(),
+                                                //   ),
+                                                // );
                                               },
                                               child: Text(
                                                 "Yes",

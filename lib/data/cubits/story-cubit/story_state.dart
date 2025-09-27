@@ -13,6 +13,7 @@ class StoryState {
   final String? videoUrl;
   final String? caption;
   final bool showViews;
+  final bool hasNewStory;
   final bool uploadingInProgress;
   final bool uploadingSuccess;
   final bool uploadingFailure;
@@ -34,6 +35,7 @@ class StoryState {
     required this.videoUrl,
     required this.caption,
     required this.showViews,
+    required this.hasNewStory,
     required this.uploadingInProgress,
     required this.uploadingSuccess,
     required this.uploadingFailure,
@@ -56,6 +58,7 @@ class StoryState {
       videoUrl: '',
       caption: '',
       showViews: false,
+      hasNewStory: false,
       uploadingInProgress: false,
       uploadingSuccess: false,
       uploadingFailure: false,
@@ -78,6 +81,7 @@ class StoryState {
       videoUrl: '',
       caption: '',
       showViews: false,
+      hasNewStory: false,
       uploadingInProgress: false,
       uploadingSuccess: false,
       uploadingFailure: false,
@@ -100,6 +104,7 @@ class StoryState {
     String? videoUrl,
     String? caption,
     bool? showViews,
+    bool? hasNewStory,
     bool? uploadingInProgress,
     bool? uploadingSuccess,
     bool? uploadingFailure,
@@ -120,6 +125,7 @@ class StoryState {
       videoUrl: videoUrl ?? this.videoUrl,
       caption: caption ?? this.caption,
       showViews: showViews ?? this.showViews,
+      hasNewStory: hasNewStory ?? this.hasNewStory,
       uploadingInProgress: uploadingInProgress ?? this.uploadingInProgress,
       uploadingSuccess: uploadingSuccess ?? this.uploadingSuccess,
       uploadingFailure: uploadingFailure ?? this.uploadingFailure,

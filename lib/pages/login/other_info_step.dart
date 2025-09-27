@@ -16,9 +16,26 @@ class OtherInfoStep extends StatelessWidget {
   late final TextEditingController name;
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
+  final streamService = StreamService();
 
   OtherInfoStep({super.key}) {
     name = TextEditingController();
+  }
+
+  Future<void> _ensureStreamConnected(BuildContext context) async {
+    final user = context.read<UserCubit>().state.user!;
+    print("=============== SPLASH SCREEN @ @ CONNECTING USER: ${user.id}");
+    try {
+      await streamService.connectUser(formatUserId(user.id), user.name);
+    } catch (e) {
+      // handle
+      print('Stream connect error: $e');
+    }
+  }
+
+  String formatUserId(String phoneNumber) {
+    // remove '+' and any non-allowed characters
+    return phoneNumber.replaceAll(RegExp(r'[^a-z0-9@_-]'), '');
   }
 
   @override
@@ -58,8 +75,7 @@ class OtherInfoStep extends StatelessWidget {
                                 ////print(state);
 
                                 if (info.loadingSuccess) {
-                                  final streamService = StreamService();
-
+                                  _ensureStreamConnected(context);
                                   context
                                       .read<ChatConnectionCubit>()
                                       .setStreamService(streamService);
@@ -119,15 +135,25 @@ class OtherInfoStep extends StatelessWidget {
                                     CircleAvatar(
                                       radius: 70,
                                       child:
-                                          info.profilePhoto!.isNotEmpty ||
+                                          info.profilePhoto != null ||
                                               info.uploadingPhotonSuccess
-                                          ? ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(70),
-                                              child: Image.network(
-                                                info.profilePhoto!,
-                                              ),
-                                            )
+                                          ? info.profilePhoto!.isNotEmpty
+                                                ? ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          70,
+                                                        ),
+                                                    child: Image.network(
+                                                      info.profilePhoto!,
+                                                    ),
+                                                  )
+                                                : Icon(
+                                                    Icons.person,
+                                                    size: 110,
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).colorScheme.surface,
+                                                  )
                                           : Icon(
                                               Icons.person,
                                               size: 110,

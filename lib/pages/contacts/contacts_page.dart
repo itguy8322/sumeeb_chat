@@ -158,12 +158,18 @@ class _ContactsPageState extends State<ContactsPage> {
                     user: users[i],
                     onTap: (u) async {
                       print("=============== CONNECTING OTHER USER: ${u.id}");
-                      context.read<RecentChatCubit>().resetMessageCount(u.id);
-                      context.read<ChatConnectionCubit>().makeConnection(
-                        _user.user!,
-                        u,
-                        widget.streamService,
+
+                      if (_user.user!.id != u.id) {
+                        context.read<ChatConnectionCubit>().makeConnection(
+                          _user.user!,
+                          u,
+                          widget.streamService,
+                        );
+                      }
+                      await context.read<RecentChatCubit>().resetMessageCount(
+                        u.id,
                       );
+                      context.read<RecentChatCubit>().setUnreadMessageToFalse();
                       if (Platform.isWindows) {
                         context.read<SiderManagerCubit>().onViewChatroomPage();
                       } else {

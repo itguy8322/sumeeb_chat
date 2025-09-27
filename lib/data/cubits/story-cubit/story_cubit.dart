@@ -24,10 +24,18 @@ class StoryCubit extends Cubit<StoryState> {
     emit(state.reset());
   }
 
+  setNewStoryUpdateToTrue() {
+    emit(state.copyWith(hasNewStory: true));
+  }
+
+  setNewStoryUpdateToFalse() {
+    emit(state.copyWith(hasNewStory: false));
+  }
+
   loadStories(List<AppUser> contacts, AppUser currentUSer) async {
-    print("###################### ############### ###########################");
-    print("###################### LOADING STORIES ###########################");
-    print("###################### ############### ###########################");
+    // print("###################### ############### ###########################");
+    // print("###################### LOADING STORIES ###########################");
+    // print("###################### ############### ###########################");
     Map<String, List<StoryModel>>? _stories = {};
     List<StoryModel> myStories = [];
 
@@ -108,7 +116,7 @@ class StoryCubit extends Cubit<StoryState> {
   }
 
   filterViewedStories(List<String> vd) {
-    print("==========######### FILTERING");
+    // print("==========######### FILTERING");
     Map<String, List<StoryModel>> stories = Map<String, List<StoryModel>>.from(
       state.stories,
     );
@@ -128,10 +136,10 @@ class StoryCubit extends Cubit<StoryState> {
         viewedStories[k] = v;
         stories.remove(k);
       }
-      print("==========######### AFTER FILTERING");
-      print(vd);
-      print(viewedStories);
-      print("==========######### AFTER FILTERING");
+      // print("==========######### AFTER FILTERING");
+      // print(vd);
+      // print(viewedStories);
+      // print("==========######### AFTER FILTERING");
     });
     emit(
       state.copyWith(
@@ -143,21 +151,21 @@ class StoryCubit extends Cubit<StoryState> {
   }
 
   onViewedStory(String id, int index, AppUser user) async {
-    print("IDDDDDDDDD $id index: $index");
+    // print("IDDDDDDDDD $id index: $index");
     List<String> vd = List<String>.from(state.viewedStoryIds!);
-    print(vd);
-    print("IDDDDDDDDD $id ${state.stories}");
+    // print(vd);
+    // print("IDDDDDDDDD $id ${state.stories}");
     if (state.stories.isNotEmpty) {
       final story = state.stories[id]![index];
       vd.add(story.storyId);
-      print(vd);
+      // print(vd);
       final status = await firestore.addViewToStory(story.storyId, user);
       if (status) {
-        print("####### STATUS: $status ###########");
+        // print("####### STATUS: $status ###########");
         final s = IviewedStory(storyId: story.storyId);
         await isar.writeTxn(() async {
           await isar.iviewedStorys.put(s); // insert or update
-          print("============= ADDING HISTORY =============");
+          // print("============= ADDING HISTORY =============");
         });
       }
 
@@ -251,8 +259,8 @@ class StoryCubit extends Cubit<StoryState> {
   }
 
   uploadStory({required AppUser user, String? storyText}) async {
-    debugPrint("############### $storyText #################");
-    debugPrint("############### ########## #################");
+    // debugPrint("############### $storyText #################");
+    // debugPrint("############### ########## #################");
     final now = DateTime.now();
     final expiresAt = now.add(Duration(hours: 24));
 

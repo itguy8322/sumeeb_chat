@@ -94,4 +94,35 @@ class BasicInfoCubit extends Cubit<BasicInfoState> {
       );
     }
   }
+
+  removeProfilePhoto(String id) async {
+    emit(
+      state.copyWith(
+        uploadingPhotonInProgress: true,
+        uploadingPhotonSuccess: false,
+        uploadingPhotonFailure: false,
+      ),
+    );
+    try {
+      await firestore.update(id, "users", {"profilePhoto": ""});
+      emit(
+        state.copyWith(
+          profilePhoto: "",
+          loadingSuccess: true,
+          uploadingPhotonInProgress: false,
+          uploadingPhotonSuccess: true,
+          uploadingPhotonFailure: false,
+        ),
+      );
+    } catch (e) {
+      print("################ Error: $e ################");
+      emit(
+        state.copyWith(
+          uploadingPhotonInProgress: false,
+          uploadingPhotonSuccess: false,
+          uploadingPhotonFailure: true,
+        ),
+      );
+    }
+  }
 }

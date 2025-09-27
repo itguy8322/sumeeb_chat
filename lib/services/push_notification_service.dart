@@ -24,8 +24,6 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   final id = "+$userId";
 
-  print("User not found in contacts, using userId as phone");
-
   body = lastMessage;
 
   final dir = await getApplicationDocumentsDirectory();
@@ -37,21 +35,28 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await isar.writeTxn(() async {
     final existing = await isar.irecentChats.get(int.parse(userId));
     if (existing != null) {
+      print(
+        "################## existing USER ID: ${existing.name} ##################",
+      );
       title = "You got a message from ${existing.name ?? userId}";
       existing.lastMessage = lastMessage;
       existing.messageCount += 1;
+      existing.date = DateTime.now().toString();
+      existing.status = 'received';
       await isar.irecentChats.put(existing);
     } else {
       title = "You got a message from $userId";
       await isar.irecentChats.put(
         IrecentChats(id: int.parse(userId))
-          ..id = userId.hashCode
           ..phone = id
           ..lastMessage = lastMessage
-          ..messageCount = 1,
+          ..messageCount = 1
+          ..date = DateTime.now().toString()
+          ..status = 'received',
       );
     }
   });
+  isar.close();
   AwesomeNotifications().createNotification(
     content: NotificationContent(
       id: DateTime.now().millisecond.remainder(100000),
@@ -121,33 +126,37 @@ class PushNotificationService {
       final mappedContacts = contacts.state.mappedContacts;
       final id = "+$userId";
       print("##### MAPPED CONTACTS: $mappedContacts");
-      if (mappedContacts.containsKey(id)) {
-        print("User found in contacts");
-        final contact = mappedContacts[id]!;
-        title = "You got a message from ${contact.name}";
-        body = lastMessage;
-      } else {
-        print("User not found in contacts, using userId as phone");
-        title = "You got a message from $userId";
-        body = lastMessage;
+      try {
+        if (mappedContacts.containsKey(id)) {
+          print("User found in contacts");
+          final contact = mappedContacts[id]!;
+          title = "You got a message from ${contact.name}";
+          body = lastMessage;
+        } else {
+          print("User not found in contacts, using userId as phone");
+          title = "You got a message from $userId";
+          body = lastMessage;
+        }
+
+        if (connection.state.otherUser != null) {
+          print("########## CHECKING USER STATE IS CURRENT ##########");
+          print(connection.state.otherUser!.id);
+          print(userId);
+          print("########## CHECKING USER STATE IS CURRENT ##########");
+          userState = connection.state.otherUser!.id == id;
+          print("########## NEW USER STATE: $userState");
+        }
+
+        print("########## USER STATE: $userState");
+        recentChatCubit.setUnreadMessageToTrue();
+        recentChatCubit.addChatToHistoryFromNotification(
+          userId,
+          lastMessage,
+          userState,
+        );
+      } catch (e) {
+        print("Error in processing notification: $e");
       }
-
-      if (connection.state.otherUser != null) {
-        print("########## CHECKING USER STATE IS CURRENT ##########");
-        print(connection.state.otherUser!.id);
-        print(userId);
-        print("########## CHECKING USER STATE IS CURRENT ##########");
-        userState = connection.state.otherUser!.id == id;
-        print("########## NEW USER STATE: $userState");
-      }
-
-      print("########## USER STATE: $userState");
-      recentChatCubit.addChatToHistoryFromNotification(
-        userId,
-        lastMessage,
-        userState,
-      );
-
       print("############### NOTIFICATIOM ################");
       if (!userState) {
         AwesomeNotifications().createNotification(

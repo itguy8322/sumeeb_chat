@@ -67,7 +67,12 @@ class ClearData extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             onPressed: () {
               // context.read<DebugCubit>().deleteAllCollectionsAndIsarData();
             },
@@ -160,6 +165,9 @@ class AccountSection extends StatelessWidget {
                   trailing: FilledButton.tonal(
                     style: FilledButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,

@@ -20,12 +20,12 @@ class FirestoreRepository {
         .get();
     if (q.docs.isEmpty) return null;
     final d = q.docs.first.data();
-    print(d);
+    // print(d);
     return AppUser.fromMap(d);
   }
 
   Future<void> createUser(AppUser user) async {
-    print("============= CREATE NEW USER: ${user.id}");
+    // print("============= CREATE NEW USER: ${user.id}");
     final docRef = db.collection(_users).doc(user.id);
     await docRef.set(user.toMap(), SetOptions(merge: true));
   }
@@ -75,7 +75,7 @@ class FirestoreRepository {
   }
 
   Future<bool> addViewToStory(String storyId, AppUser user) async {
-    print("ADDD VIEWS ======================");
+    // print("ADDD VIEWS ======================");
     print(storyId);
     final query = await db
         .collection("stories")
@@ -97,9 +97,9 @@ class FirestoreRepository {
   }
 
   Future<List<StoryModel>> loadStory(String userId) async {
-    print("########## THIS USER ################3");
+    // print("########## THIS USER ################3");
     print(userId);
-    print("########## THIS USER ################3");
+    // print("########## THIS USER ################3");
 
     final snapshot = await db
         .collection('stories')
@@ -112,8 +112,8 @@ class FirestoreRepository {
     for (var doc in snapshot.docs) {
       final viewsSnapshots = await doc.reference.collection('views').get();
       final views = viewsSnapshots.docs.map((view) => view.data()).toList();
-      print("#############@@@@@@@@@@@@@@##### $views");
-      print(doc.data()['color']);
+      // print("#############@@@@@@@@@@@@@@##### $views");
+      // print(doc.data()['color']);
       stories.add(StoryModel.fromJson(doc.data(), views));
     }
 
