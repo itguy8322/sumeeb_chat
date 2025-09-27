@@ -48,89 +48,92 @@ class _MediaStoryFormState extends State<MediaStoryForm> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            BlocBuilder<StoryCubit, StoryState>(
-              builder: (context, state) {
-                return Center(
-                  child: Container(
-                    height: MediaQuery.of(context).size.height * 0.3,
-                    width: MediaQuery.of(context).size.width * 0.7,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white.withOpacity(0.3),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: BlocBuilder<StoryCubit, StoryState>(
+                builder: (context, state) {
+                  return Center(
+                    child: Container(
+                      height: MediaQuery.of(context).size.height * 0.3,
+                      width: MediaQuery.of(context).size.width * 0.7,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      child: state.type == 'photo'
+                          ? state.photoUrl != null && state.photoUrl!.isNotEmpty
+                                ? Image.file(File(state.photoUrl!))
+                                : SizedBox()
+                          : state.type == 'video'
+                          ? FutureBuilder<File?>(
+                              future: generateThumbnail(state.videoUrl!),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return Center(
+                                    child: const CircularProgressIndicator(),
+                                  );
+                                }
+                                if (snapshot.hasData && snapshot.data != null) {
+                                  return Image.file(snapshot.data!);
+                                }
+                                return const Icon(
+                                  Icons.play_circle_outline,
+                                  size: 50,
+                                );
+                              },
+                            )
+                          : SizedBox(),
                     ),
-                    child: state.uploadingInProgress
-                        ? SizedBox(
-                            height: 1,
-                            width: 1,
-                            child: CircularProgressIndicator(),
-                          )
-                        : state.uploadingSuccess
-                        ? state.type == 'photo'
-                              ? Image.network(state.photoUrl!)
-                              : FutureBuilder<File?>(
-                                  future: generateThumbnail(state.videoUrl!),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return Center(
-                                        child:
-                                            const CircularProgressIndicator(),
-                                      );
-                                    }
-                                    if (snapshot.hasData &&
-                                        snapshot.data != null) {
-                                      return Image.file(snapshot.data!);
-                                    }
-                                    return const Icon(Icons.videocam);
-                                  },
-                                )
-                        : SizedBox(),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(18.0),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 7, 0, 41),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.emoji_emotions),
-                          onPressed: _toggleEmojiPicker,
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: _messageController,
-                            decoration: InputDecoration(
-                              hintText: 'Add caption',
-                              border: InputBorder.none,
-                            ),
-
-                            onChanged: (text) async {
-                              if (text.trim().isEmpty) return;
-
-                              context.read<StoryCubit>().onCaptionChanged(
-                                text.trim(),
-                              );
-                              // await state.channel!.sendMessage(
-                              //   Message(text: text.trim()),
-                              // );
-                              // _messageController.clear();
-                            },
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(18.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Color.fromARGB(255, 7, 0, 41),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.emoji_emotions),
+                            onPressed: _toggleEmojiPicker,
                           ),
-                        ),
-                      ],
+                          Expanded(
+                            child: TextField(
+                              controller: _messageController,
+                              decoration: InputDecoration(
+                                hintText: 'Add caption',
+                                border: InputBorder.none,
+                              ),
+
+                              onChanged: (text) async {
+                                if (text.trim().isEmpty) return;
+
+                                context.read<StoryCubit>().onCaptionChanged(
+                                  text.trim(),
+                                );
+                                // await state.channel!.sendMessage(
+                                //   Message(text: text.trim()),
+                                // );
+                                // _messageController.clear();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -147,7 +150,7 @@ class _MediaStoryFormState extends State<MediaStoryForm> {
                             );
                             if (pickedFile != null) {
                               (pickedFile.path);
-                              context.read<StoryCubit>().uploadPhoto(
+                              context.read<StoryCubit>().setPhotoUrl(
                                 pickedFile.path,
                               );
                             }
@@ -191,7 +194,7 @@ class _MediaStoryFormState extends State<MediaStoryForm> {
                             if (result != null &&
                                 result.files.single.path != null) {
                               final filePath = result.files.single.path!;
-                              context.read<StoryCubit>().uploadVideo(filePath);
+                              context.read<StoryCubit>().setVideoUrl(filePath);
                             }
                           },
                           child: Container(

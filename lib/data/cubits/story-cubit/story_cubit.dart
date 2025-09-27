@@ -198,64 +198,12 @@ class StoryCubit extends Cubit<StoryState> {
     }
   }
 
-  uploadPhoto(String path) async {
-    emit(
-      state.copyWith(
-        uploadingInProgress: true,
-        uploadingSuccess: false,
-        uploadingFailure: false,
-      ),
-    );
-    try {
-      final url = await fileUpload.uploadFile(path);
-      emit(
-        state.copyWith(
-          photoUrl: url,
-          type: 'photo',
-          uploadingInProgress: false,
-          uploadingSuccess: true,
-          uploadingFailure: false,
-        ),
-      );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          uploadingInProgress: false,
-          uploadingSuccess: false,
-          uploadingFailure: true,
-        ),
-      );
-    }
+  setPhotoUrl(String path) async {
+    emit(state.copyWith(photoUrl: path, type: 'photo'));
   }
 
-  uploadVideo(String path) async {
-    emit(
-      state.copyWith(
-        uploadingInProgress: true,
-        uploadingSuccess: false,
-        uploadingFailure: false,
-      ),
-    );
-    try {
-      final url = await fileUpload.uploadFile(path);
-      emit(
-        state.copyWith(
-          type: 'video',
-          videoUrl: url,
-          uploadingInProgress: false,
-          uploadingSuccess: true,
-          uploadingFailure: false,
-        ),
-      );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          uploadingInProgress: false,
-          uploadingSuccess: false,
-          uploadingFailure: true,
-        ),
-      );
-    }
+  setVideoUrl(String path) async {
+    emit(state.copyWith(type: 'video', videoUrl: path));
   }
 
   uploadStory({required AppUser user, String? storyText}) async {
@@ -263,7 +211,14 @@ class StoryCubit extends Cubit<StoryState> {
     // debugPrint("############### ########## #################");
     final now = DateTime.now();
     final expiresAt = now.add(Duration(hours: 24));
-
+    String? photoUrl = '';
+    String? videoUrl = '';
+    if (state.photoUrl != null && state.photoUrl!.isNotEmpty) {
+      photoUrl = await fileUpload.uploadFile(state.photoUrl!);
+    }
+    if (state.videoUrl != null && state.videoUrl!.isNotEmpty) {
+      videoUrl = await fileUpload.uploadFile(state.videoUrl!);
+    }
     final story = {
       "userId": user.id,
       "storyId": "story_${generateUniqueId()}",
@@ -271,8 +226,8 @@ class StoryCubit extends Cubit<StoryState> {
       "text": storyText ?? '',
       "color": state.colorIndex,
       "caption": state.caption,
-      "photoUrl": state.photoUrl,
-      "videoUrl": state.videoUrl,
+      "photoUrl": photoUrl,
+      "videoUrl": videoUrl,
       "timestamp": FieldValue.serverTimestamp(),
       "expiresAt": expiresAt,
     };

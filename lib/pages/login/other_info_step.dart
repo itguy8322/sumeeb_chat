@@ -1,7 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sumeeb_chat/data/cubits/basic-info/basic_info_cubit.dart';
-import 'package:sumeeb_chat/data/cubits/basic-info/basic_info_state.dart';
 import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/storage/storage_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
@@ -13,14 +13,13 @@ import 'package:image_picker/image_picker.dart';
 
 class OtherInfoStep extends StatelessWidget {
   // OtherInfoStep({super.key, required this.currentUser});
-  late final TextEditingController name;
+  final name = TextEditingController();
+  final photoUrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final ImagePicker _picker = ImagePicker();
   final streamService = StreamService();
 
-  OtherInfoStep({super.key}) {
-    name = TextEditingController();
-  }
+  OtherInfoStep({super.key});
 
   Future<void> _ensureStreamConnected(BuildContext context) async {
     final user = context.read<UserCubit>().state.user!;
@@ -44,16 +43,8 @@ class OtherInfoStep extends StatelessWidget {
       builder: (context, state) {
         if (state.user!.name.isNotEmpty) {
           name.text = state.user!.name;
-          context.read<BasicInfoCubit>().onSetName(name.text);
         }
-        if (state.user!.profilePhoto != null) {
-          if (state.user!.profilePhoto!.isNotEmpty) {
-            context.read<BasicInfoCubit>().setProfilePhotoUrl(
-              state.user!.profilePhoto!,
-            );
-          }
-        }
-        print(context.read<BasicInfoCubit>().state.profilePhoto);
+
         return Scaffold(
           body: Padding(
             padding: const EdgeInsets.all(30.0),
@@ -70,11 +61,11 @@ class OtherInfoStep extends StatelessWidget {
                       children: [
                         MultiBlocListener(
                           listeners: [
-                            BlocListener<BasicInfoCubit, BasicInfoState>(
-                              listener: (context, info) {
+                            BlocListener<UserCubit, UserState>(
+                              listener: (context, user) {
                                 ////print(state);
 
-                                if (info.loadingSuccess) {
+                                if (user.uploadingSuccess) {
                                   _ensureStreamConnected(context);
                                   context
                                       .read<ChatConnectionCubit>()
@@ -106,88 +97,83 @@ class OtherInfoStep extends StatelessWidget {
                         SizedBox(
                           height: MediaQuery.of(context).size.height * 0.08,
                         ),
-                        BlocBuilder<BasicInfoCubit, BasicInfoState>(
-                          builder: (context, info) {
-                            return InkWell(
-                              onTap: info.uploadingPhotonInProgress
-                                  ? null
-                                  : () async {
-                                      final pickedFile = await _picker
-                                          .pickImage(
-                                            source: ImageSource.gallery,
-                                          );
-                                      if (pickedFile != null) {
-                                        (pickedFile.path);
-                                        context
-                                            .read<BasicInfoCubit>()
-                                            .setProfilePhoto(pickedFile.path);
-                                      }
-                                    },
-                              child: Container(
-                                width: 140,
-                                height: 140,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 70,
-                                      child:
-                                          info.profilePhoto != null ||
-                                              info.uploadingPhotonSuccess
-                                          ? info.profilePhoto!.isNotEmpty
-                                                ? ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          70,
-                                                        ),
-                                                    child: Image.network(
-                                                      info.profilePhoto!,
-                                                    ),
-                                                  )
-                                                : Icon(
-                                                    Icons.person,
-                                                    size: 110,
-                                                    color: Theme.of(
-                                                      context,
-                                                    ).colorScheme.surface,
-                                                  )
-                                          : Icon(
-                                              Icons.person,
-                                              size: 110,
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.surface,
-                                            ),
-                                    ),
-                                    Positioned(
-                                      bottom: 2,
-                                      right: 2,
-                                      child: Container(
-                                        padding: EdgeInsets.all(2),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: Colors.white,
+                        InkWell(
+                          onTap: state.uploadingInProgress
+                              ? null
+                              : () async {
+                                  final pickedFile = await _picker.pickImage(
+                                    source: ImageSource.gallery,
+                                  );
+                                  if (pickedFile != null) {
+                                    context
+                                        .read<UserCubit>()
+                                        .setProfilePhotoUrl(pickedFile.path);
+                                  }
+                                },
+                          child: Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(shape: BoxShape.circle),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 70,
+                                  child: state.newProfilePhotoUrl.isNotEmpty
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            70,
+                                          ),
+                                          child: Image.file(
+                                            File(state.newProfilePhotoUrl),
+                                          ),
+                                        )
+                                      : state.user!.profilePhoto != null
+                                      ? state.user!.profilePhoto!.isNotEmpty
+                                            ? ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(70),
+                                                child: Image.network(
+                                                  state.user!.profilePhoto!,
+                                                ),
+                                              )
+                                            : Icon(
+                                                Icons.person,
+                                                size: 110,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.surface,
+                                              )
+                                      : Icon(
+                                          Icons.person,
+                                          size: 110,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.surface,
                                         ),
-                                        child: Icon(
-                                          Icons.add_circle,
-                                          size: 30,
-                                          color: Colors.amber,
-                                        ),
-                                      ),
-                                    ),
-                                    info.uploadingPhotonInProgress
-                                        ? Center(
-                                            child: CircularProgressIndicator(),
-                                          )
-                                        : SizedBox(),
-                                  ],
                                 ),
-                              ),
-                            );
-                          },
+                                Positioned(
+                                  bottom: 2,
+                                  right: 2,
+                                  child: Container(
+                                    padding: EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                    ),
+                                    child: Icon(
+                                      Icons.add_circle,
+                                      size: 30,
+                                      color: Colors.amber,
+                                    ),
+                                  ),
+                                ),
+                                state.uploadingInProgress
+                                    ? Center(child: CircularProgressIndicator())
+                                    : SizedBox(),
+                              ],
+                            ),
+                          ),
                         ),
 
                         // CircleAvatar(
@@ -213,14 +199,11 @@ class OtherInfoStep extends StatelessWidget {
                             }
                             return null;
                           },
-                          onChanged: (value) {
-                            context.read<BasicInfoCubit>().onSetName(value);
-                          },
                         ),
                         SizedBox(
                           height: MediaQuery.of(context).size.height * 0.3,
                         ),
-                        BlocBuilder<BasicInfoCubit, BasicInfoState>(
+                        BlocBuilder<UserCubit, UserState>(
                           builder: (context, info) {
                             return ElevatedButton(
                               style: ElevatedButton.styleFrom(
@@ -232,7 +215,7 @@ class OtherInfoStep extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              onPressed: info.loadingInProgress
+                              onPressed: info.uploadingInProgress
                                   ? null
                                   : () {
                                       if (!_formKey.currentState!.validate()) {
@@ -242,11 +225,12 @@ class OtherInfoStep extends StatelessWidget {
                                         state.user!.id,
                                         name.text,
                                       );
-                                      context
-                                          .read<BasicInfoCubit>()
-                                          .uploadBasicInfo(state.user!.id);
+                                      context.read<UserCubit>().uploadBasicInfo(
+                                        state.user!.id,
+                                        name.text,
+                                      );
                                     },
-                              child: info.loadingInProgress
+                              child: info.uploadingInProgress
                                   ? CircularProgressIndicator()
                                   : Text(
                                       "Next",

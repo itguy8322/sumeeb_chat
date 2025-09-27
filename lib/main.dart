@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sumeeb_chat/data/cubits/basic-info/basic_info_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/contacts-cubit/contacts_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/otp-verification-cubit/otp_verification_cubit.dart';
@@ -123,12 +122,9 @@ void main() async {
         BlocProvider(create: (_) => DarkModeCubit()),
         BlocProvider(create: (_) => SiderManagerCubit()),
         BlocProvider(create: (_) => ViewStoryCubit()),
-        BlocProvider(create: (_) => UserCubit(firestoreRepo)),
+        BlocProvider(create: (_) => UserCubit(firestoreRepo, fileUploadRepo)),
         BlocProvider(create: (_) => OtpVerificationCubit(auth)),
         BlocProvider(create: (_) => NotificationsPreferenceCubit()),
-        BlocProvider(
-          create: (_) => BasicInfoCubit(firestoreRepo, fileUploadRepo),
-        ),
         BlocProvider(
           create: (_) => StoryCubit(firestoreRepo, isar, fileUploadRepo),
         ),

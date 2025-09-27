@@ -3,10 +3,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:sumeeb_chat/data/cubits/basic-info/basic_info_cubit.dart';
-import 'package:sumeeb_chat/data/cubits/basic-info/basic_info_state.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
+import 'package:sumeeb_chat/data/cubits/user-cubit/user_state.dart';
 import 'package:sumeeb_chat/data/models/user/user_model.dart';
 import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
@@ -19,10 +18,7 @@ class ViewProfilePhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.read<BasicInfoCubit>().reset();
-    if (isMe) {
-      context.read<BasicInfoCubit>().onSetName(user.name);
-    }
+    context.read<UserCubit>().setProfilePhotoUrl('');
     return isMe
         ? Scaffold(
             appBar: AppBar(
@@ -38,53 +34,49 @@ class ViewProfilePhoto extends StatelessWidget {
               ),
               title: Text(user.name),
             ),
-            body: BlocBuilder<BasicInfoCubit, BasicInfoState>(
+            body: BlocBuilder<UserCubit, UserState>(
               builder: (context, info) {
-                if (info.loadingSuccess) {
-                  context.read<UserCubit>().loadUser(user.id);
-                }
                 return Stack(
                   children: [
-                    BlocListener<BasicInfoCubit, BasicInfoState>(
+                    BlocListener<UserCubit, UserState>(
                       listener: (context, state) {
-                        if (state.uploadingPhotonFailure) {
+                        if (state.uploadingFailure) {
                           showTopSnackBar(
                             Overlay.of(context),
                             CustomSnackBar.error(
                               message: "Failed to upload photo",
                             ),
                           );
-                        } else if (state.loadingSuccess) {
+                        } else if (state.uploadingSuccess) {
                           showTopSnackBar(
                             Overlay.of(context),
                             CustomSnackBar.success(
                               message: "Photo updated successfully",
                             ),
                           );
-                          context.read<UserCubit>().loadUser(user.id);
                         }
                       },
                       child: SizedBox(),
                     ),
                     Center(
-                      child: user.profilePhoto == null
-                          ? info.profilePhoto == null
-                                ? Container(
-                                    width: MediaQuery.of(context).size.width,
-                                    height: MediaQuery.of(context).size.width,
-                                    color: Colors.white,
-                                    child: Icon(
-                                      Icons.person,
-                                      size: 110,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.surface,
-                                    ),
-                                  )
-                                : Image.network(info.profilePhoto!)
-                          : Image.network(user.profilePhoto!),
+                      child: info.newProfilePhotoUrl.isNotEmpty
+                          ? Image.file(File(info.newProfilePhotoUrl))
+                          : info.user!.profilePhoto == null ||
+                                info.user!.profilePhoto!.isEmpty
+                          ? Container(
+                              width: MediaQuery.of(context).size.width,
+                              height: MediaQuery.of(context).size.width,
+                              color: Colors.white,
+                              child: Icon(
+                                Icons.person,
+                                size: 110,
+                                color: Theme.of(context).colorScheme.surface,
+                              ),
+                            )
+                          : Image.network(info.user!.profilePhoto!),
+                      // : Image.network(user.profilePhoto!),
                     ),
-                    info.uploadingPhotonInProgress || info.loadingInProgress
+                    info.uploadingInProgress
                         ? Center(child: CircularProgressIndicator())
                         : SizedBox(),
                     Positioned(
@@ -105,11 +97,13 @@ class ViewProfilePhoto extends StatelessWidget {
                               ),
                             ),
 
-                            onPressed: () {
-                              context.read<BasicInfoCubit>().removeProfilePhoto(
-                                user.id,
-                              );
-                            },
+                            onPressed: info.uploadingInProgress
+                                ? null
+                                : () {
+                                    context
+                                        .read<UserCubit>()
+                                        .removeProfilePhoto(user.id);
+                                  },
                             label: Text(
                               "Remove",
                               style: TextStyle(color: Colors.black),
@@ -118,26 +112,31 @@ class ViewProfilePhoto extends StatelessWidget {
                           ),
 
                           ElevatedButton.icon(
-                            onPressed: () async {
-                              if (info.profilePhoto == null) {
-                                final pickedFile = await _picker.pickImage(
-                                  source: ImageSource.gallery,
-                                );
-                                if (pickedFile != null) {
-                                  (pickedFile.path);
-                                  context
-                                      .read<BasicInfoCubit>()
-                                      .setProfilePhoto(pickedFile.path);
-                                }
-                              } else {
-                                print(
-                                  "############### CHANGING ##############",
-                                );
-                                context.read<BasicInfoCubit>().uploadBasicInfo(
-                                  user.id,
-                                );
-                              }
-                            },
+                            onPressed: info.uploadingInProgress
+                                ? null
+                                : () async {
+                                    if (info.newProfilePhotoUrl.isEmpty) {
+                                      final pickedFile = await _picker
+                                          .pickImage(
+                                            source: ImageSource.gallery,
+                                          );
+                                      if (pickedFile != null) {
+                                        (pickedFile.path);
+                                        context
+                                            .read<UserCubit>()
+                                            .setProfilePhotoUrl(
+                                              pickedFile.path,
+                                            );
+                                      }
+                                    } else {
+                                      print(
+                                        "############### CHANGING ##############",
+                                      );
+                                      context
+                                          .read<UserCubit>()
+                                          .uploadProfilePhoto();
+                                    }
+                                  },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.amber,
                               fixedSize: Size.fromWidth(
@@ -148,7 +147,7 @@ class ViewProfilePhoto extends StatelessWidget {
                               ),
                             ),
                             label: Text(
-                              info.profilePhoto == null
+                              info.newProfilePhotoUrl.isEmpty
                                   ? "Change photo"
                                   : "Save Photo",
                               style: TextStyle(color: Colors.black),

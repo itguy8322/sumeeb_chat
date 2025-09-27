@@ -7,13 +7,11 @@ import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_state.da
 import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
-import 'package:sumeeb_chat/pages/chatroom/view_profile_photo.dart'
-    hide Scaffold;
+import 'package:sumeeb_chat/pages/chatroom/view_profile_photo.dart';
 import 'package:sumeeb_chat/pages/contacts/contacts_page.dart';
 import 'package:sumeeb_chat/pages/home/home_page.dart';
 import 'package:sumeeb_chat/services/stream_service.dart';
 import 'package:sumeeb_chat/styles/color_schemes.dart';
-import '../../data/models/user/user_model.dart';
 import 'thread_page.dart';
 import 'package:stream_chat_flutter/stream_chat_flutter.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
@@ -138,8 +136,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                         title: Row(
                           children: [
                             Text(
-                              other != null && other.name.isNotEmpty
-                                  ? other.name
+                              other != null
+                                  ? other.disPlayName.isNotEmpty
+                                        ? other.disPlayName
+                                        : other.name
                                   : 'Unknown',
                             ),
                           ],

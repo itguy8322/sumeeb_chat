@@ -262,16 +262,26 @@ class StoriesPage extends StatelessWidget {
                             for (String userId in viewedStories.keys)
                               (InkWell(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ViewStoryPage(
-                                        user: user,
-                                        userId: userId,
-                                        stories: viewedStories[userId]!,
+                                  if (Platform.isWindows) {
+                                    context
+                                        .read<SiderManagerCubit>()
+                                        .onViewStatusPage(
+                                          user,
+                                          userId,
+                                          viewedStories[userId]!,
+                                        );
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ViewStoryPage(
+                                          user: user,
+                                          userId: userId,
+                                          stories: viewedStories[userId]!,
+                                        ),
                                       ),
-                                    ),
-                                  );
+                                    );
+                                  }
                                 },
                                 child: ViewedStoryTile(userId: userId),
                               )),

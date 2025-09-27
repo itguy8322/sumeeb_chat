@@ -62,7 +62,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         .mappedContacts
         .keys
         .toList();
-    print("%%%%%%%%%%%%%%%%%%%%%%%% $contactIds %%%%%%%%%%%%%%%%%%%%%%%%");
     final stream = prepareListenForStoryUpdates(contactIds);
     setState(() {
       isListening = true;
