@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/story-cubit/story_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/story-cubit/story_state.dart';
 import 'package:sumeeb_chat/data/models/user/user_model.dart';
@@ -42,7 +43,19 @@ class _MediaStoryFormState extends State<MediaStoryForm> {
   Widget build(BuildContext context) {
     context.read<StoryCubit>().reset();
     return Scaffold(
-      appBar: AppBar(title: Text("Add Story")),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            if (Platform.isWindows) {
+              context.read<SiderManagerCubit>().resetToDefaultPage();
+            } else {
+              Navigator.pop(context);
+            }
+          },
+          icon: Icon(Icons.arrow_back_ios),
+        ),
+        title: Text("Add Story"),
+      ),
       body: Padding(
         padding: EdgeInsets.all(17.0),
         child: Column(
@@ -242,6 +255,10 @@ class _MediaStoryFormState extends State<MediaStoryForm> {
                           );
                           if (!Platform.isWindows) {
                             Navigator.pop(context);
+                          } else {
+                            context
+                                .read<SiderManagerCubit>()
+                                .resetToDefaultPage();
                           }
                           print("There is file");
                         } else {

@@ -25,7 +25,7 @@ class ViewProfilePhoto extends StatelessWidget {
               leading: IconButton(
                 onPressed: () {
                   if (Platform.isWindows) {
-                    context.read<SiderManagerCubit>().onViewChatroomPage();
+                    context.read<SiderManagerCubit>().resetToDefaultPage();
                   } else {
                     Navigator.pop(context);
                   }
@@ -165,7 +165,13 @@ class ViewProfilePhoto extends StatelessWidget {
         : Scaffold(
             appBar: AppBar(
               leading: IconButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  if (Platform.isWindows) {
+                    context.read<SiderManagerCubit>().onViewChatroomPage();
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
                 icon: Icon(Icons.arrow_back_ios),
               ),
               title: Text(user.name),
@@ -185,6 +191,5 @@ class ViewProfilePhoto extends StatelessWidget {
                     ),
             ),
           );
-    ;
   }
 }

@@ -11,7 +11,9 @@ class SiderManagerCubit extends Cubit<SidebarManagerState> {
   }
 
   onViewProfilePhotoPage(AppUser user, bool isMe) {
-    emit(state.copWith(page: PageType.mediaStory, user: user));
+    emit(
+      state.copWith(page: PageType.viewProfilePhoto, user: user, isMe: isMe),
+    );
   }
 
   onViewStatusPage(AppUser user, String userId, List<StoryModel> stories) {

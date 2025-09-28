@@ -5,6 +5,7 @@ import 'package:auto_size_text_field/auto_size_text_field.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/story-cubit/story_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/story-cubit/story_state.dart';
 import 'package:sumeeb_chat/data/models/user/user_model.dart';
@@ -41,7 +42,19 @@ class _TextStoryFormState extends State<TextStoryForm> {
     return BlocBuilder<StoryCubit, StoryState>(
       builder: (context, story) {
         return Scaffold(
-          appBar: AppBar(backgroundColor: storyColors[story.colorIndex]),
+          appBar: AppBar(
+            leading: IconButton(
+              onPressed: () {
+                if (Platform.isWindows) {
+                  context.read<SiderManagerCubit>().resetToDefaultPage();
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+              icon: Icon(Icons.arrow_back_ios),
+            ),
+            backgroundColor: storyColors[story.colorIndex],
+          ),
           backgroundColor: storyColors[story.colorIndex],
           body: Column(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -110,6 +123,10 @@ class _TextStoryFormState extends State<TextStoryForm> {
                           );
                           if (!Platform.isWindows) {
                             Navigator.pop(context);
+                          } else {
+                            context
+                                .read<SiderManagerCubit>()
+                                .resetToDefaultPage();
                           }
                         },
                         icon: Icon(Icons.send),
@@ -125,8 +142,8 @@ class _TextStoryFormState extends State<TextStoryForm> {
                         config: Config(
                           emojiViewConfig: EmojiViewConfig(
                             // backgroundColor: Theme.of(context).colorScheme.surface,
-                            columns: 7,
-                            emojiSizeMax: 32,
+                            columns: Platform.isAndroid ? 10 : 15,
+                            emojiSizeMax: Platform.isAndroid ? 32 : 28,
                             // buttonMode: ButtonMode.NONE,
                           ),
                         ),

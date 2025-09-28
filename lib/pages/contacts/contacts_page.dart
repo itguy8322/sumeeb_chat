@@ -1,6 +1,5 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers, use_build_context_synchronously
 
-import 'package:flutter/foundation.dart';
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,8 +11,6 @@ import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dar
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_state.dart';
-import '../../data/cubits/auth_cubit.dart';
-import '../../data/models/user/user_model.dart';
 import '../../widgets/contact_tile.dart';
 import '../chatroom/chatroom_page.dart';
 import '../../services/stream_service.dart';
@@ -49,11 +46,11 @@ class _ContactsPageState extends State<ContactsPage> {
   //   }
   // }
 
-  String _normalizePhone(String raw) {
-    final digits = raw.replaceAll(RegExp(r'[^0-9+]'), '');
-    // Very naive normalization: ensure starts with + or digits
-    return digits;
-  }
+  // String _normalizePhone(String raw) {
+  //   final digits = raw.replaceAll(RegExp(r'[^0-9+]'), '');
+  //   // Very naive normalization: ensure starts with + or digits
+  //   return digits;
+  // }
 
   String formatUserId(String phoneNumber) {
     // remove '+' and any non-allowed characters
@@ -108,6 +105,8 @@ class _ContactsPageState extends State<ContactsPage> {
       appBar: AppBar(
         // foregroundColor: Colors.white,
         // backgroundColor: Colors.blueAccent,
+        leading: SizedBox(),
+        leadingWidth: 0,
         title: Text('Contacts'),
         actions: [
           Platform.isWindows

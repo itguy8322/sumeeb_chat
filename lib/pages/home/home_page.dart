@@ -340,21 +340,6 @@ class _BlurBottomNavBarState extends State<BlurBottomNavBar> {
                   width: widget.width,
                   onTap: (currentIndex) async {
                     _onItemTapped(currentIndex);
-                    // AwesomeNotifications().createNotification(
-                    //   content: NotificationContent(
-                    //     id: DateTime.now().millisecond.remainder(100000),
-                    //     channelKey: 'basic_channel',
-                    //     // bigPicture: 'asset://assets/icon/icon.png',
-                    //     icon: 'resource://drawable/ic_stat_notify',
-                    //     title: "New message",
-                    //     body: "You got a message",
-                    //     // payload: {
-                    //     //   "channel_id": data['channel_id'] ?? '',
-                    //     //   "message_id": data['message_id'] ?? '',
-                    //     //   "sender": data['sender'] ?? '',
-                    //     // },
-                    //   ),
-                    // );
                   },
                 ),
                 // _buildNavItem('favorite-chart', 2),

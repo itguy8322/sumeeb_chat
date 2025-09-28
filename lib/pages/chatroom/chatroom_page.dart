@@ -121,6 +121,12 @@ class _ChatroomPageState extends State<ChatroomPage> {
                             context
                                 .read<ChatConnectionCubit>()
                                 .resetConnection();
+                            if (Platform.isWindows) {
+                              context
+                                  .read<SiderManagerCubit>()
+                                  .resetToDefaultPage();
+                              return;
+                            }
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -411,8 +417,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                     config: Config(
                                       emojiViewConfig: EmojiViewConfig(
                                         // backgroundColor: Theme.of(context).colorScheme.surface,
-                                        columns: 7,
-                                        emojiSizeMax: 32,
+                                        columns: Platform.isAndroid ? 10 : 15,
+                                        emojiSizeMax: Platform.isAndroid
+                                            ? 32
+                                            : 28,
                                         // buttonMode: ButtonMode.NONE,
                                       ),
                                     ),
