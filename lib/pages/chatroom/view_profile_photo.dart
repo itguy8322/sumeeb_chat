@@ -18,7 +18,6 @@ class ViewProfilePhoto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.read<UserCubit>().setProfilePhotoUrl('');
     return isMe
         ? Scaffold(
             appBar: AppBar(
@@ -40,30 +39,31 @@ class ViewProfilePhoto extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Container(
-                      child: Stack(
-                        children: [
-                          BlocListener<UserCubit, UserState>(
-                            listener: (context, state) {
-                              if (state.uploadingFailure) {
-                                showTopSnackBar(
-                                  Overlay.of(context),
-                                  CustomSnackBar.error(
-                                    message: "Failed to upload photo",
-                                  ),
-                                );
-                              } else if (state.uploadingSuccess) {
-                                showTopSnackBar(
-                                  Overlay.of(context),
-                                  CustomSnackBar.success(
-                                    message: "Photo updated successfully",
-                                  ),
-                                );
-                              }
-                            },
-                            child: SizedBox(),
-                          ),
-                          Center(
+                    Stack(
+                      children: [
+                        BlocListener<UserCubit, UserState>(
+                          listener: (context, state) {
+                            if (state.uploadingFailure) {
+                              showTopSnackBar(
+                                Overlay.of(context),
+                                CustomSnackBar.error(
+                                  message: "Failed to upload photo",
+                                ),
+                              );
+                            } else if (state.uploadingSuccess) {
+                              showTopSnackBar(
+                                Overlay.of(context),
+                                CustomSnackBar.success(
+                                  message: "Photo updated successfully",
+                                ),
+                              );
+                            }
+                          },
+                          child: SizedBox(),
+                        ),
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 420),
+                          child: Center(
                             child: info.newProfilePhotoUrl.isNotEmpty
                                 ? Image.file(File(info.newProfilePhotoUrl))
                                 : info.user!.profilePhoto == null ||
@@ -83,11 +83,19 @@ class ViewProfilePhoto extends StatelessWidget {
                                 : Image.network(info.user!.profilePhoto!),
                             // : Image.network(user.profilePhoto!),
                           ),
-                          info.uploadingInProgress
-                              ? Center(child: CircularProgressIndicator())
-                              : SizedBox(),
-                        ],
-                      ),
+                        ),
+                        info.uploadingInProgress
+                            ? Positioned(
+                                top: 0,
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              )
+                            : SizedBox(),
+                      ],
                     ),
                     SizedBox(height: 20),
                     Row(

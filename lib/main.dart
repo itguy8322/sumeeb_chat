@@ -31,6 +31,7 @@ import 'app.dart';
 import 'data/cubits/auth_cubit.dart';
 import 'data/repositories/firestore/firestore_repository.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:window_size/window_size.dart' as window_size;
 
 // import 'package:permission_handler/permission_handler.dart';
 
@@ -43,6 +44,9 @@ void main() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp, // normal portrait
   ]);
+  if (Platform.isWindows) {
+    window_size.setWindowMinSize(const Size.fromWidth(760)); // Max size
+  }
   if (Platform.isWindows) {
     await Firebase.initializeApp(
       options: const FirebaseOptions(

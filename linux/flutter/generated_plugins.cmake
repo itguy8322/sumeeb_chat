@@ -13,6 +13,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   record_linux
   url_launcher_linux
   volume_controller
+  window_size
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

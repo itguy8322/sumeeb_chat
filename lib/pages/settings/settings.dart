@@ -119,6 +119,7 @@ class AccountSection extends StatelessWidget {
                 return ListTile(
                   leading: InkWell(
                     onTap: () {
+                      context.read<UserCubit>().setProfilePhotoUrl('');
                       if (Platform.isWindows) {
                         context
                             .read<SiderManagerCubit>()

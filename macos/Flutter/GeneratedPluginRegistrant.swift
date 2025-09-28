@@ -34,6 +34,7 @@ import url_launcher_macos
 import video_player_avfoundation
 import volume_controller
 import wakelock_plus
+import window_size
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   AudioSessionPlugin.register(with: registry.registrar(forPlugin: "AudioSessionPlugin"))
@@ -65,4 +66,5 @@ func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   FVPVideoPlayerPlugin.register(with: registry.registrar(forPlugin: "FVPVideoPlayerPlugin"))
   VolumeControllerPlugin.register(with: registry.registrar(forPlugin: "VolumeControllerPlugin"))
   WakelockPlusMacosPlugin.register(with: registry.registrar(forPlugin: "WakelockPlusMacosPlugin"))
+  WindowSizePlugin.register(with: registry.registrar(forPlugin: "WindowSizePlugin"))
 }
