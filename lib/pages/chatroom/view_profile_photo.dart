@@ -36,126 +36,126 @@ class ViewProfilePhoto extends StatelessWidget {
             ),
             body: BlocBuilder<UserCubit, UserState>(
               builder: (context, info) {
-                return Stack(
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    BlocListener<UserCubit, UserState>(
-                      listener: (context, state) {
-                        if (state.uploadingFailure) {
-                          showTopSnackBar(
-                            Overlay.of(context),
-                            CustomSnackBar.error(
-                              message: "Failed to upload photo",
-                            ),
-                          );
-                        } else if (state.uploadingSuccess) {
-                          showTopSnackBar(
-                            Overlay.of(context),
-                            CustomSnackBar.success(
-                              message: "Photo updated successfully",
-                            ),
-                          );
-                        }
-                      },
-                      child: SizedBox(),
-                    ),
-                    Center(
-                      child: info.newProfilePhotoUrl.isNotEmpty
-                          ? Image.file(File(info.newProfilePhotoUrl))
-                          : info.user!.profilePhoto == null ||
-                                info.user!.profilePhoto!.isEmpty
-                          ? Container(
-                              width: MediaQuery.of(context).size.width,
-                              height: MediaQuery.of(context).size.width,
-                              color: Colors.white,
-                              child: Icon(
-                                Icons.person,
-                                size: 110,
-                                color: Theme.of(context).colorScheme.surface,
-                              ),
-                            )
-                          : Image.network(info.user!.profilePhoto!),
-                      // : Image.network(user.profilePhoto!),
-                    ),
-                    info.uploadingInProgress
-                        ? Center(child: CircularProgressIndicator())
-                        : SizedBox(),
-                    Positioned(
-                      bottom: 30,
-                      right: 0,
-                      left: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    Container(
+                      child: Stack(
                         children: [
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber,
-                              fixedSize: Size.fromWidth(
-                                MediaQuery.of(context).size.width * 0.38,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-
-                            onPressed: info.uploadingInProgress
-                                ? null
-                                : () {
-                                    context
-                                        .read<UserCubit>()
-                                        .removeProfilePhoto(user.id);
-                                  },
-                            label: Text(
-                              "Remove",
-                              style: TextStyle(color: Colors.black),
-                            ),
-                            icon: Icon(Icons.cancel, color: Colors.black),
+                          BlocListener<UserCubit, UserState>(
+                            listener: (context, state) {
+                              if (state.uploadingFailure) {
+                                showTopSnackBar(
+                                  Overlay.of(context),
+                                  CustomSnackBar.error(
+                                    message: "Failed to upload photo",
+                                  ),
+                                );
+                              } else if (state.uploadingSuccess) {
+                                showTopSnackBar(
+                                  Overlay.of(context),
+                                  CustomSnackBar.success(
+                                    message: "Photo updated successfully",
+                                  ),
+                                );
+                              }
+                            },
+                            child: SizedBox(),
                           ),
-
-                          ElevatedButton.icon(
-                            onPressed: info.uploadingInProgress
-                                ? null
-                                : () async {
-                                    if (info.newProfilePhotoUrl.isEmpty) {
-                                      final pickedFile = await _picker
-                                          .pickImage(
-                                            source: ImageSource.gallery,
-                                          );
-                                      if (pickedFile != null) {
-                                        (pickedFile.path);
-                                        context
-                                            .read<UserCubit>()
-                                            .setProfilePhotoUrl(
-                                              pickedFile.path,
-                                            );
-                                      }
-                                    } else {
-                                      print(
-                                        "############### CHANGING ##############",
-                                      );
-                                      context
-                                          .read<UserCubit>()
-                                          .uploadProfilePhoto();
-                                    }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber,
-                              fixedSize: Size.fromWidth(
-                                MediaQuery.of(context).size.width * 0.38,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            label: Text(
-                              info.newProfilePhotoUrl.isEmpty
-                                  ? "Change photo"
-                                  : "Save Photo",
-                              style: TextStyle(color: Colors.black),
-                            ),
-                            icon: Icon(Icons.image, color: Colors.black),
+                          Center(
+                            child: info.newProfilePhotoUrl.isNotEmpty
+                                ? Image.file(File(info.newProfilePhotoUrl))
+                                : info.user!.profilePhoto == null ||
+                                      info.user!.profilePhoto!.isEmpty
+                                ? Container(
+                                    width: MediaQuery.of(context).size.width,
+                                    height: MediaQuery.of(context).size.width,
+                                    color: Colors.white,
+                                    child: Icon(
+                                      Icons.person,
+                                      size: 110,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.surface,
+                                    ),
+                                  )
+                                : Image.network(info.user!.profilePhoto!),
+                            // : Image.network(user.profilePhoto!),
                           ),
+                          info.uploadingInProgress
+                              ? Center(child: CircularProgressIndicator())
+                              : SizedBox(),
                         ],
                       ),
+                    ),
+                    SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 20,
+                      children: [
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber,
+                            maximumSize: Size.fromWidth(200),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+
+                          onPressed: info.uploadingInProgress
+                              ? null
+                              : () {
+                                  context.read<UserCubit>().removeProfilePhoto(
+                                    user.id,
+                                  );
+                                },
+                          label: Text(
+                            "Remove",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          icon: Icon(Icons.cancel, color: Colors.black),
+                        ),
+
+                        ElevatedButton.icon(
+                          onPressed: info.uploadingInProgress
+                              ? null
+                              : () async {
+                                  if (info.newProfilePhotoUrl.isEmpty) {
+                                    final pickedFile = await _picker.pickImage(
+                                      source: ImageSource.gallery,
+                                    );
+                                    if (pickedFile != null) {
+                                      (pickedFile.path);
+                                      context
+                                          .read<UserCubit>()
+                                          .setProfilePhotoUrl(pickedFile.path);
+                                    }
+                                  } else {
+                                    print(
+                                      "############### CHANGING ##############",
+                                    );
+                                    context
+                                        .read<UserCubit>()
+                                        .uploadProfilePhoto();
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber,
+                            maximumSize: Size.fromWidth(200),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          label: Text(
+                            info.newProfilePhotoUrl.isEmpty
+                                ? "Change photo"
+                                : "Save Photo",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          icon: Icon(Icons.image, color: Colors.black),
+                        ),
+                      ],
                     ),
                   ],
                 );
