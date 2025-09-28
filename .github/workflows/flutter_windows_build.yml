@@ -37,13 +37,14 @@ jobs:
 
       # Build APK (on Ubuntu)
       - name: Extract Version from pubspec.yaml
+        if: matrix.os == 'ubuntu-latest'
         id: get_version
         run: |
           VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f2 | cut -d '+' -f1)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Build Android APK
         if: matrix.os == 'ubuntu-latest'
-        run: flutter build apk
+        run: flutter build apk --release
 
       # Build Windows exe (on Windows)
       - name: Build Windows exe
