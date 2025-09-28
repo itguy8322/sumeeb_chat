@@ -280,8 +280,8 @@ class _MediaStoryFormState extends State<MediaStoryForm> {
                   config: Config(
                     emojiViewConfig: EmojiViewConfig(
                       // backgroundColor: Theme.of(context).colorScheme.surface,
-                      columns: 7,
-                      emojiSizeMax: 32,
+                      columns: Platform.isAndroid ? 10 : 13,
+                      emojiSizeMax: Platform.isAndroid ? 32 : 28,
                       // buttonMode: ButtonMode.NONE,
                     ),
                   ),

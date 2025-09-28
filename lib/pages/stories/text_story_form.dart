@@ -142,7 +142,7 @@ class _TextStoryFormState extends State<TextStoryForm> {
                         config: Config(
                           emojiViewConfig: EmojiViewConfig(
                             // backgroundColor: Theme.of(context).colorScheme.surface,
-                            columns: Platform.isAndroid ? 10 : 15,
+                            columns: Platform.isAndroid ? 10 : 13,
                             emojiSizeMax: Platform.isAndroid ? 32 : 28,
                             // buttonMode: ButtonMode.NONE,
                           ),
