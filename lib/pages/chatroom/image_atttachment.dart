@@ -7,6 +7,7 @@ class ImageAtttachment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      onTap: () => print("Image tapped"),
       child: Builder(
         builder: (context) {
           if (imageUrls.isEmpty) return const SizedBox.shrink();

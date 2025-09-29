@@ -31,7 +31,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
     emit(state.copyWith(hasUnreadMessages: hasUnread));
   }
 
-  addChatToHistory(AppUser user, String message) async {
+  addChatToHistory(AppUser user, String message, String type) async {
     print("============= ADDING HISTORY =============");
     final recentChatUser = await isar.irecentChats.get(int.parse(user.id));
     if (recentChatUser != null) {
@@ -50,6 +50,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
     final recentUser = IrecentChats(id: int.parse(user.id))
       ..name = user.name
       ..phone = user.phone
+      ..type = type
       ..lastMessage = message
       ..profilePhoto = user.profilePhoto
       ..date = DateTime.now().toString()
@@ -149,6 +150,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
           final recentChat = RecentChatModel(
             user: appUser,
             message: user.lastMessage!,
+            type: user.type!,
             messageCount: "${user.messageCount}",
             date: user.date ?? '',
             status: user.status ?? 'received',
@@ -169,6 +171,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
             profilePhoto: user.profilePhoto,
           ),
           message: user.lastMessage!,
+          type: user.type!,
           messageCount: user.messageCount.toString(),
           date: user.date!,
           status: user.status!,

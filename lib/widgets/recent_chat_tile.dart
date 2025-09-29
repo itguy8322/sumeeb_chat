@@ -46,7 +46,15 @@ class RecentChatTile extends StatelessWidget {
         children: [
           Text(
             recentChat.status == 'sent'
-                ? "✔${recentChat.message}"
+                ? recentChat.type == 'photo'
+                      ? "✔ 🖼️ ${recentChat.message.isEmpty ? 'Photo' : recentChat.message}"
+                      : recentChat.type == 'video'
+                      ? "✔ 🎬 ${recentChat.message.isEmpty ? 'Video' : recentChat.message}"
+                      : recentChat.type == 'file'
+                      ? "✔ 📄 ${recentChat.message.isEmpty ? 'File' : recentChat.message}"
+                      : recentChat.type == 'audio'
+                      ? "✔ 🎙️ ${recentChat.message.isEmpty ? 'Voice note' : recentChat.message}"
+                      : "✔ ${recentChat.message}"
                 : recentChat.message,
           ),
           Text(recentChat.date.split('.')[0]),
