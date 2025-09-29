@@ -62,6 +62,14 @@ class FirestoreRepository {
     return results;
   }
 
+  Future<void> set(
+    String id,
+    String collection,
+    Map<String, dynamic> data,
+  ) async {
+    await db.collection(collection).doc(id).set(data);
+  }
+
   Future<void> update(
     String id,
     String collection,

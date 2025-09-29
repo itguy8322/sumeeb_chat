@@ -9,6 +9,7 @@ class IrecentChats {
   String? phone;
   String? profilePhoto;
   String? lastMessage;
+  String? type;
   String? date;
   String? status;
   int messageCount = 0;

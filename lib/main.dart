@@ -109,7 +109,7 @@ void main() async {
   // }
   final recentChatCubit = RecentChatCubit(isar, firestoreRepo);
   final contacts = ContactsCubit(firestoreRepo, isar);
-  final chatConnection = ChatConnectionCubit();
+  final chatConnection = ChatConnectionCubit(firestoreRepo);
   final streamService = StreamService();
   PushNotificationService.initialize(
     recentChatCubit,

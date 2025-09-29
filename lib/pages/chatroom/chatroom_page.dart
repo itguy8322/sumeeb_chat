@@ -1,13 +1,24 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:record/record.dart';
 import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_state.dart';
+import 'package:sumeeb_chat/data/cubits/contacts-cubit/contacts_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/recent-chats-cubit/recent_chat_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/sidebar-manager/sider_manager_cubit.dart';
 import 'package:sumeeb_chat/data/cubits/user-cubit/user_cubit.dart';
+import 'package:sumeeb_chat/pages/chatroom/image_atttachment.dart';
+import 'package:sumeeb_chat/pages/chatroom/reply_message.dart';
+import 'package:sumeeb_chat/pages/chatroom/reply_preview.dart';
 import 'package:sumeeb_chat/pages/chatroom/view_profile_photo.dart';
+import 'package:sumeeb_chat/pages/chatroom/voicenote_attachment.dart';
 import 'package:sumeeb_chat/pages/contacts/contacts_page.dart';
 import 'package:sumeeb_chat/pages/home/home_page.dart';
 import 'package:sumeeb_chat/services/stream_service.dart';
@@ -29,6 +40,16 @@ class _ChatroomPageState extends State<ChatroomPage> {
   bool _showEmojiPicker = false;
   final TextEditingController _messageController = TextEditingController();
 
+  // Replace 'AudioRecorder()' with the actual concrete implementation of Record, or remove if not used
+  final AudioRecorder _recorder = AudioRecorder();
+  Timer? recodeTimer;
+  bool _isRecording = false;
+  String? _filePath;
+  int _recordDuration = 0;
+  bool isReplyMessage = false;
+  Message? replyMessage;
+  final Map<String, GlobalKey> messageKeys = {};
+
   void _onEmojiSelected(Category? category, Emoji emoji) {
     _messageController.text += emoji.emoji;
     _messageController.selection = TextSelection.fromPosition(
@@ -42,20 +63,336 @@ class _ChatroomPageState extends State<ChatroomPage> {
     });
   }
 
+  void startRecordTimer() async {
+    recodeTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        _recordDuration++;
+      });
+      // timer.tick
+    });
+  }
+
+  Future<void> _toggleRecord() async {
+    try {
+      final hasPermission = await _recorder.hasPermission();
+      if (!hasPermission) {
+        print("No microphone permission!");
+        return;
+      }
+      final status = await Permission.microphone.request();
+      if (!status.isGranted) {
+        print("Microphone permission not granted!");
+        return;
+      }
+      if (!_isRecording) {
+        // Start recording
+        final dir =
+            "/storage/emulated/0/Documents"; // await getApplicationDocumentsDirectory();
+        final path =
+            '$dir/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+        await _recorder.start(path: path, RecordConfig());
+        startRecordTimer();
+        setState(() {
+          _isRecording = true;
+          _filePath = path;
+        });
+
+        print("Recording started: $_filePath");
+      } else {
+        // Stop recording
+        final path = await _recorder.stop();
+        print("########### PATH: $path #################");
+        setState(() {
+          _isRecording = false;
+          _filePath = path;
+          _recordDuration = 0;
+          recodeTimer?.cancel();
+        });
+
+        if (path != null) {
+          final file = File(path);
+          if (await file.exists()) {
+            final length = await file.length();
+            final state = context.read<ChatConnectionCubit>().state;
+            final channel = state.channel;
+            if (channel == null) return;
+            // final serialNo = Random().nextInt(9999999);
+            await channel.sendMessage(
+              Message(
+                attachments: [
+                  Attachment(
+                    type: 'audio',
+                    file: AttachmentFile(
+                      path: path,
+                      name: "VOICE_NOTE.mp3",
+                      size: File(path).lengthSync(),
+                    ),
+                  ),
+                ],
+              ),
+            );
+            print("Recording saved: $path (${length} bytes)");
+          } else {
+            print("Recording stopped but file not found: $path");
+          }
+        }
+      }
+    } catch (e, st) {
+      print("Recording error: $e");
+      print(st);
+    }
+  }
+
+  void cancelRecording() async {
+    if (_isRecording) {
+      await _recorder.stop();
+      recodeTimer?.cancel();
+      setState(() {
+        _isRecording = false;
+        _filePath = null;
+        _recordDuration = 0;
+      });
+      print("Recording cancelled");
+    }
+  }
+
+  String formatTime(int seconds) {
+    final minutes = (seconds ~/ 60).toString().padLeft(2, '0');
+    final secs = (seconds % 60).toString().padLeft(2, '0');
+    return "$minutes:$secs";
+  }
+
+  final GlobalKey _attachmentButton = GlobalKey();
+  void _showAttachmentTypes() async {
+    final RenderBox button =
+        _attachmentButton.currentContext!.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final Offset position = button.localToGlobal(
+      Offset.zero,
+      ancestor: overlay,
+    );
+    final other = context.read<ChatConnectionCubit>().state.otherUser;
+
+    final selected = await showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        position.dx,
+        position.dy + button.size.height,
+        position.dx + button.size.width,
+        position.dy,
+      ),
+      items: [
+        PopupMenuItem(
+          value: '',
+          child: SizedBox(
+            width: 300,
+            height: 100,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.image, size: 40, color: Colors.blue),
+                      onPressed: () async {
+                        Navigator.pop(context, 'image');
+                        FilePickerResult? result = await FilePicker.platform
+                            .pickFiles(
+                              type: FileType.image,
+                              allowMultiple: true,
+                            );
+
+                        if (result != null) {
+                          final files = result.files
+                              .map((file) => file)
+                              .toList();
+                          if (files.isEmpty) return;
+                          final state = context
+                              .read<ChatConnectionCubit>()
+                              .state;
+                          final channel = state.channel;
+                          if (channel == null) return;
+                          context.read<RecentChatCubit>().addChatToHistory(
+                            other!,
+                            _messageController.text.trim().isEmpty
+                                ? "Photo"
+                                : _messageController.text.trim(),
+                            'image',
+                          );
+                          await state.channel!.sendMessage(
+                            Message(
+                              text: _messageController.text,
+                              attachments: List.generate(
+                                files.length,
+                                (index) => Attachment(
+                                  type: 'image',
+                                  file: AttachmentFile(
+                                    path: files[index].path,
+                                    name: files[index].name,
+                                    size: files[index].size,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    Text("Photos"),
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.videocam_sharp,
+                        size: 40,
+                        color: Colors.purple,
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(context, 'video');
+                        FilePickerResult? result = await FilePicker.platform
+                            .pickFiles(
+                              type: FileType.video,
+                              allowMultiple: true,
+                            );
+
+                        if (result != null) {
+                          final files = result.files
+                              .map((file) => file)
+                              .toList();
+                          if (files.isEmpty) return;
+                          final state = context
+                              .read<ChatConnectionCubit>()
+                              .state;
+                          final channel = state.channel;
+                          if (channel == null) return;
+
+                          context.read<RecentChatCubit>().addChatToHistory(
+                            other!,
+                            _messageController.text.trim().isEmpty
+                                ? "Video"
+                                : _messageController.text.trim(),
+                            'video',
+                          );
+                          await state.channel!.sendMessage(
+                            Message(
+                              text: _messageController.text,
+                              attachments: List.generate(
+                                files.length,
+                                (index) => Attachment(
+                                  type: 'video',
+                                  file: AttachmentFile(
+                                    path: files[index].path,
+                                    name: files[index].name,
+                                    size: files[index].size,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    Text("Videos"),
+                  ],
+                ),
+                Column(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.insert_drive_file,
+                        size: 40,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () async {
+                        Navigator.pop(context, 'document');
+                        FilePickerResult? result = await FilePicker.platform
+                            .pickFiles(type: FileType.any, allowMultiple: true);
+
+                        if (result != null) {
+                          final files = result.files
+                              .map((file) => file)
+                              .toList();
+                          if (files.isEmpty) return;
+                          final state = context
+                              .read<ChatConnectionCubit>()
+                              .state;
+                          final channel = state.channel;
+                          if (channel == null) return;
+                          context.read<RecentChatCubit>().addChatToHistory(
+                            other!,
+                            _messageController.text.trim().isEmpty
+                                ? "File"
+                                : _messageController.text.trim(),
+                            'file',
+                          );
+                          await state.channel!.sendMessage(
+                            Message(
+                              text: _messageController.text,
+                              attachments: List.generate(
+                                files.length,
+                                (index) => Attachment(
+                                  type: 'file',
+                                  file: AttachmentFile(
+                                    path: files[index].path,
+                                    name: files[index].name,
+                                    size: files[index].size,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    Text("Documents"),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+
+    if (selected != null) {
+      print("Selected: $selected");
+    }
+  }
+
+  void scrollToQuotedMessage(String messageId) {
+    final key = messageKeys[messageId];
+    if (key == null) return;
+
+    final ctx = key.currentContext;
+    if (ctx == null) return;
+
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 400),
+      alignment: 0.3, // bring it near center
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = context.read<UserCubit>().state.user!;
-    print("##############################");
+    // print("##############################");
     final other = context.read<ChatConnectionCubit>().state.otherUser;
-    print("##############################");
+    // print("##############################");
+
     return BlocBuilder<ChatConnectionCubit, ChatConnectionState>(
       builder: (context, conn) {
         return MaterialApp(
           theme: ThemeData(colorScheme: myColorScheme),
           builder: (context, child) {
-            print(
-              "########### ${widget.streamService} #################>>>>>>>>>>>",
-            );
+            // print(
+            //   "########### ${widget.streamService} #################>>>>>>>>>>>",
+            // );
             return StreamChat(
               client: widget.streamService.client,
               child: child,
@@ -231,33 +568,106 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                       final currentUser = StreamChat.of(
                                         context,
                                       ).currentUser;
-
+                                      final key = GlobalKey();
+                                      messageKeys[message.id] = key;
+                                      final Map<String, dynamic>? replyTo =
+                                          message.extraData['reply_to'] != null
+                                          ? message.extraData['reply_to']
+                                                as Map<String, dynamic>
+                                          : null;
+                                      print(
+                                        "############@@@@@@@@@@@############# REPLY TO: ${replyTo?['type']}",
+                                      );
+                                      // if (replyTo != null) {
+                                      //   print(
+                                      //     "+${replyTo["user"]} == ${currentUser!.id}",
+                                      //   );
+                                      // }
                                       if (message.user!.id != currentUser!.id) {
                                         // Receiver’s message → custom avatar + bubble
-                                        return Stack(
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            defaultMessage,
-                                            Positioned(
-                                              bottom: 0,
-                                              left: 5,
-                                              child: CircleAvatar(
-                                                radius: 18,
+                                            replyTo != null &&
+                                                    !message.isDeleted
+                                                ? InkWell(
+                                                    onTap: () {
+                                                      final messageId =
+                                                          replyTo['id'];
+                                                      if (messageId != null) {
+                                                        scrollToQuotedMessage(
+                                                          messageId!,
+                                                        );
+                                                      }
+                                                    },
+                                                    child: ReplyMessage(
+                                                      currentUser: currentUser,
+                                                      replyTo: replyTo,
+                                                    ),
+                                                  )
+                                                : SizedBox(),
+                                            GestureDetector(
+                                              key: key,
+                                              onPanStart: (details) {
+                                                print(
+                                                  "Finger down at: ${details.localPosition}",
+                                                );
+                                              },
+                                              onPanUpdate: (details) {
+                                                // Check horizontal movement (swipe right)
+                                                if (details.delta.dx > 10) {
+                                                  print("Swiping right...");
+                                                  setState(() {
+                                                    isReplyMessage = true;
+                                                    replyMessage = message;
+                                                  });
+                                                }
+                                              },
+                                              onPanEnd: (details) {
+                                                print("Finger lifted");
+                                                if (isReplyMessage) {
+                                                  print(
+                                                    "Replying to: ${message.attachments.first.type?.rawType}",
+                                                  );
+                                                }
+                                              },
+                                              child: Stack(
+                                                children: [
+                                                  defaultMessage.copyWith(
+                                                    attachmentBuilders: [
+                                                      AudioAttachmentBuilder(),
+                                                    ],
+                                                  ),
+                                                  Positioned(
+                                                    bottom: 0,
+                                                    left: 5,
+                                                    child: CircleAvatar(
+                                                      radius: 18,
 
-                                                child: other != null
-                                                    ? other.profilePhoto != null
-                                                          ? other
-                                                                    .profilePhoto!
-                                                                    .isNotEmpty
-                                                                ? ClipRRect(
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                          70,
-                                                                        ),
-                                                                    child: Image.network(
-                                                                      other
-                                                                          .profilePhoto!,
-                                                                    ),
-                                                                  )
+                                                      child: other != null
+                                                          ? other.profilePhoto !=
+                                                                    null
+                                                                ? other
+                                                                          .profilePhoto!
+                                                                          .isNotEmpty
+                                                                      ? ClipRRect(
+                                                                          borderRadius: BorderRadius.circular(
+                                                                            70,
+                                                                          ),
+                                                                          child: Image.network(
+                                                                            other.profilePhoto!,
+                                                                          ),
+                                                                        )
+                                                                      : Text(
+                                                                          other
+                                                                              .name[0],
+                                                                          style: TextStyle(
+                                                                            color: Theme.of(
+                                                                              context,
+                                                                            ).colorScheme.surface,
+                                                                          ),
+                                                                        )
                                                                 : Text(
                                                                     other
                                                                         .name[0],
@@ -268,21 +678,16 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                                                     ),
                                                                   )
                                                           : Text(
-                                                              other.name[0],
+                                                              'Unknown',
                                                               style: TextStyle(
                                                                 color: Theme.of(
                                                                   context,
                                                                 ).colorScheme.surface,
                                                               ),
-                                                            )
-                                                    : Text(
-                                                        'Unknown',
-                                                        style: TextStyle(
-                                                          color: Theme.of(
-                                                            context,
-                                                          ).colorScheme.surface,
-                                                        ),
-                                                      ),
+                                                            ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
@@ -290,7 +695,63 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                       }
 
                                       // Sender’s (my own) message → just bubble
-                                      return defaultMessage;
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          replyTo != null && !message.isDeleted
+                                              ? InkWell(
+                                                  onTap: () {
+                                                    final messageId =
+                                                        replyTo['id'];
+                                                    if (messageId != null) {
+                                                      scrollToQuotedMessage(
+                                                        messageId!,
+                                                      );
+                                                    }
+                                                  },
+                                                  child: ReplyMessage(
+                                                    currentUser: currentUser,
+                                                    replyTo: replyTo,
+                                                  ),
+                                                )
+                                              : SizedBox(),
+                                          GestureDetector(
+                                            key: key,
+                                            onPanStart: (details) {
+                                              print(
+                                                "Finger down at: ${details.localPosition}",
+                                              );
+                                            },
+                                            onPanUpdate: (details) {
+                                              // Check horizontal movement (swipe right)
+                                              if (details.delta.dx > 10) {
+                                                print("Swiping right...");
+                                                setState(() {
+                                                  isReplyMessage = true;
+                                                  replyMessage = message;
+                                                });
+                                              }
+                                            },
+                                            onPanEnd: (details) {
+                                              print("Finger lifted");
+                                              if (isReplyMessage) {
+                                                print(
+                                                  "Replying to: ${message.attachments.first.type?.rawType}",
+                                                );
+                                              }
+                                            },
+                                            child: defaultMessage.copyWith(
+                                              showDeleteMessage: true,
+                                              showReplyMessage: true,
+                                              showReactionPicker: true,
+                                              attachmentBuilders: [
+                                                AudioAttachmentBuilder(),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      );
                                     },
                                     threadBuilder: (context, parent) {
                                       return ThreadPage(parent: parent!);
@@ -303,8 +764,49 @@ class _ChatroomPageState extends State<ChatroomPage> {
                           // StreamMessageInput(),
                           Column(
                             children: [
+                              if (_isRecording)
+                                (Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    8,
+                                    0,
+                                    20,
+                                    0,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      IconButton(
+                                        onPressed: () {
+                                          cancelRecording();
+                                        },
+                                        icon: Icon(Icons.cancel_outlined),
+                                      ),
+                                      Text("Recording..."),
+                                      Spacer(),
+                                      Text(formatTime(_recordDuration)),
+                                    ],
+                                  ),
+                                ))
+                              else
+                                SizedBox(),
+                              isReplyMessage
+                                  ? ReplyPreview(
+                                      currentUser: currentUser,
+                                      replyMessage: replyMessage!,
+                                      onClose: () {
+                                        setState(() {
+                                          isReplyMessage = false;
+                                          replyMessage = null;
+                                        });
+                                      },
+                                    )
+                                  : SizedBox(),
                               Padding(
-                                padding: const EdgeInsets.all(18.0),
+                                padding: const EdgeInsets.fromLTRB(
+                                  18.0,
+                                  2,
+                                  18,
+                                  18,
+                                ),
                                 child: Container(
                                   decoration: BoxDecoration(
                                     color: Color.fromARGB(255, 7, 0, 41),
@@ -314,40 +816,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                   child: Row(
                                     children: [
                                       IconButton(
+                                        key: _attachmentButton,
                                         icon: Icon(Icons.attach_file),
                                         onPressed: () async {
-                                          FilePickerResult? result =
-                                              await FilePicker.platform
-                                                  .pickFiles();
-
-                                          if (result != null &&
-                                              result.files.single.path !=
-                                                  null) {
-                                            final filePath =
-                                                result.files.single.path!;
-
-                                            // Send the file as attachment
-                                            await state.channel!.sendMessage(
-                                              Message(
-                                                attachments: [
-                                                  Attachment(
-                                                    type: 'file',
-                                                    file: AttachmentFile(
-                                                      path: filePath,
-                                                      name: result
-                                                          .files
-                                                          .single
-                                                          .name,
-                                                      size: result
-                                                          .files
-                                                          .single
-                                                          .size,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }
+                                          _showAttachmentTypes();
                                         },
                                       ),
                                       IconButton(
@@ -367,16 +839,64 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                                 other == null)
                                               return;
 
+                                            // final message_id = "message-id-${currentUser.id}-${DateTime.now()
+                                            //     .microsecondsSinceEpoch}";
+                                            // if (replyMessage != null){
+                                            //   context.read<ChatConnectionCubit>().addRepyMessage(message_id, replyMessage!);
+                                            // }
+                                            final type = replyMessage
+                                                ?.attachments
+                                                .first
+                                                .type
+                                                ?.rawType;
                                             context
                                                 .read<RecentChatCubit>()
                                                 .addChatToHistory(
                                                   other,
                                                   text.trim(),
+                                                  type!,
                                                 );
                                             await state.channel!.sendMessage(
                                               Message(
+                                                // id: message_id,
                                                 text: text.trim(),
+
                                                 extraData: {
+                                                  'reply_to':
+                                                      replyMessage == null
+                                                      ? null
+                                                      : {
+                                                          'id':
+                                                              replyMessage!.id,
+                                                          'text': replyMessage!
+                                                              .text,
+                                                          'user': replyMessage!
+                                                              .user
+                                                              ?.name,
+                                                          'type': type,
+                                                          'attachments':
+                                                              type == 'image'
+                                                              ? List.generate(
+                                                                  replyMessage!
+                                                                      .attachments
+                                                                      .length,
+                                                                  (
+                                                                    index,
+                                                                  ) => replyMessage!
+                                                                      .attachments[index]
+                                                                      .imageUrl,
+                                                                )
+                                                              : List.generate(
+                                                                  replyMessage!
+                                                                      .attachments
+                                                                      .length,
+                                                                  (
+                                                                    index,
+                                                                  ) => replyMessage!
+                                                                      .attachments[index]
+                                                                      .assetUrl,
+                                                                ),
+                                                        },
                                                   'sender_id': currentUser.id,
                                                   'sender_name':
                                                       currentUser.name,
@@ -384,8 +904,22 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                               ),
                                             );
                                             _messageController.clear();
+                                            setState(() {
+                                              replyMessage = null;
+                                              isReplyMessage = false;
+                                            });
                                           },
                                         ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          _isRecording ? Icons.stop : Icons.mic,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: () {
+                                          // Implement voice note recording and sending
+                                          _toggleRecord();
+                                        },
                                       ),
                                       IconButton(
                                         icon: Icon(Icons.send),
@@ -395,13 +929,66 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                           if (text.isEmpty || other == null) {
                                             return;
                                           }
+
+                                          final type = replyMessage
+                                              ?.attachments
+                                              .first
+                                              .type
+                                              ?.rawType;
                                           context
                                               .read<RecentChatCubit>()
-                                              .addChatToHistory(other, text);
+                                              .addChatToHistory(
+                                                other,
+                                                text,
+                                                type!,
+                                              );
                                           await state.channel!.sendMessage(
-                                            Message(text: text),
+                                            Message(
+                                              text: text,
+                                              extraData: {
+                                                'reply_to': replyMessage == null
+                                                    ? null
+                                                    : {
+                                                        'id': replyMessage!.id,
+                                                        'text':
+                                                            replyMessage!.text,
+                                                        'user': replyMessage!
+                                                            .user
+                                                            ?.name,
+                                                        'type': type,
+                                                        'attachments':
+                                                            type == 'image'
+                                                            ? List.generate(
+                                                                replyMessage!
+                                                                    .attachments
+                                                                    .length,
+                                                                (
+                                                                  index,
+                                                                ) => replyMessage!
+                                                                    .attachments[index]
+                                                                    .imageUrl,
+                                                              )
+                                                            : List.generate(
+                                                                replyMessage!
+                                                                    .attachments
+                                                                    .length,
+                                                                (
+                                                                  index,
+                                                                ) => replyMessage!
+                                                                    .attachments[index]
+                                                                    .assetUrl,
+                                                              ),
+                                                      },
+                                                'sender_id': currentUser.id,
+                                                'sender_name': currentUser.name,
+                                              },
+                                            ),
                                           );
                                           _messageController.clear();
+                                          setState(() {
+                                            replyMessage = null;
+                                            isReplyMessage = false;
+                                          });
                                         },
                                       ),
                                     ],
@@ -515,5 +1102,40 @@ class _ChatroomPageState extends State<ChatroomPage> {
         );
       },
     );
+  }
+}
+
+class AudioAttachmentBuilder extends StreamAttachmentWidgetBuilder {
+  @override
+  bool isSupported(Attachment attachment) {
+    return attachment.type == 'audio' ||
+        attachment.mimeType?.startsWith('audio') == true;
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+    Message message,
+    Map<String, List<Attachment>> attachments,
+  ) {
+    // Find audio attachments from the map
+    final audioAttachments = attachments['audio'];
+    if (audioAttachments != null && audioAttachments.isNotEmpty) {
+      final attachment = audioAttachments.first;
+      final url = attachment.assetUrl ?? attachment.file?.path;
+      return VoiceNoteAttachment(attachment: attachment, audioUrl: url);
+    }
+    // Fallback if no audio attachment found
+    return SizedBox.shrink();
+  }
+
+  @override
+  bool canHandle(Message message, Map<String, List<Attachment>> attachments) {
+    final attachment = message.attachments.isNotEmpty
+        ? message.attachments.first
+        : null;
+    return attachment!.type == 'audio' ||
+        (attachment.assetUrl?.endsWith('.m4a') ?? false) ||
+        (attachment.assetUrl?.endsWith('.mp3') ?? false);
   }
 }
