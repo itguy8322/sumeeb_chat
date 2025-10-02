@@ -65,14 +65,35 @@ class ReplyPreview extends StatelessWidget {
                                         .disPlayName ??
                                     contacts[messageData['sender_id']]!.name ??
                                     messageData['sender_id']
-                        : '',
+                        : 'Unknown',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   replyMessage != null
-                      ? Text("${replyMessage!.text}")
+                      ? Text(
+                          replyMessage.text!.isNotEmpty
+                              ? replyMessage.text!
+                              : replyMessage.attachments.isNotEmpty
+                              ? replyMessage.attachments[0].type!.rawType ==
+                                        'image'
+                                    ? 'Image'
+                                    : replyMessage
+                                              .attachments[0]
+                                              .type!
+                                              .rawType ==
+                                          'video'
+                                    ? 'Video'
+                                    : replyMessage
+                                              .attachments[0]
+                                              .type!
+                                              .rawType ==
+                                          'audio'
+                                    ? 'Audio'
+                                    : 'File'
+                              : '',
+                        )
                       : SizedBox(),
                 ],
               ),

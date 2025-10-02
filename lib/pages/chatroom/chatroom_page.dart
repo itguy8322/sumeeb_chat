@@ -83,6 +83,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
       if (!status.isGranted) {
         return;
       }
+
       if (!_isRecording) {
         // Start recording
 
@@ -111,6 +112,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
           if (await file.exists()) {
             final length = await file.length();
             final state = context.read<ChatConnectionCubit>().state;
+            final currentUser = context.read<UserCubit>().state.user;
             final channel = state.channel;
             if (channel == null) return;
             // final serialNo = Random().nextInt(9999999);
@@ -126,6 +128,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                     ),
                   ),
                 ],
+                extraData: {
+                  'sender_id': currentUser!.id,
+                  'sender_name': currentUser.name,
+                },
               ),
             );
           } else {}
@@ -163,6 +169,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
       ancestor: overlay,
     );
     final other = context.read<ChatConnectionCubit>().state.otherUser;
+    final currentUser = context.read<UserCubit>().state.user;
 
     final selected = await showMenu(
       context: context,
@@ -224,6 +231,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                   ),
                                 ),
                               ),
+                              extraData: {
+                                'sender_id': currentUser!.id,
+                                'sender_name': currentUser.name,
+                              },
                             ),
                           );
                         }
@@ -280,6 +291,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                   ),
                                 ),
                               ),
+                              extraData: {
+                                'sender_id': currentUser!.id,
+                                'sender_name': currentUser.name,
+                              },
                             ),
                           );
                         }
@@ -332,6 +347,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                   ),
                                 ),
                               ),
+                              extraData: {
+                                'sender_id': currentUser!.id,
+                                'sender_name': currentUser.name,
+                              },
                             ),
                           );
                         }
