@@ -70,7 +70,7 @@ class ViewProfilePhoto extends StatelessWidget {
                                       info.user!.profilePhoto!.isEmpty
                                 ? Container(
                                     width: MediaQuery.of(context).size.width,
-                                    height: MediaQuery.of(context).size.width,
+                                    height: 420,
                                     color: Colors.white,
                                     child: Icon(
                                       Icons.person,

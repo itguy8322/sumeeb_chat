@@ -69,8 +69,9 @@ class _VoiceNoteAttachmentState extends State<VoiceNoteAttachment> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(8),
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.all(0),
+      margin: const EdgeInsets.symmetric(vertical: 2),
+      width: 300,
 
       child: Column(
         children: [
@@ -81,7 +82,7 @@ class _VoiceNoteAttachmentState extends State<VoiceNoteAttachment> {
                 icon: Icon(
                   _isPlaying ? Icons.pause_circle : Icons.play_circle,
                   size: 36,
-                  color: Colors.blue,
+                  color: Theme.of(context).colorScheme.surface,
                 ),
                 onPressed: _togglePlay,
               ),

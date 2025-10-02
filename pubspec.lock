@@ -1761,26 +1761,26 @@ packages:
     dependency: transitive
     description:
       name: stream_chat
-      sha256: aec8e2ab908a927cf3f7f528e141272cd9dac03de9a11e5232072f16a62986bb
+      sha256: "2b4509cb6066fe4c0b73d44332bfb784e97449ac52f41793cdcf4db60e3c8042"
       url: "https://pub.dev"
     source: hosted
-    version: "9.16.0"
+    version: "9.17.0"
   stream_chat_flutter:
     dependency: "direct main"
     description:
       name: stream_chat_flutter
-      sha256: "75515d01fd6efdc4ad65ea8b026e4a2045b94a08538d5144d86ad2b664d834c3"
+      sha256: "9049fc554c81f246728937cb91e18ee78f92b5b0c3f90e1807f80d78df5d6126"
       url: "https://pub.dev"
     source: hosted
-    version: "9.16.0"
+    version: "9.17.0"
   stream_chat_flutter_core:
     dependency: transitive
     description:
       name: stream_chat_flutter_core
-      sha256: afdd74ec4cbcd4a580217e6779e61be3a684cdef6572bdccafb803cccfbd417f
+      sha256: "38c519450d3f748e200c183a573fe4a0e2a6dabdac117ef665ab5f0d7cfd2b01"
       url: "https://pub.dev"
     source: hosted
-    version: "9.16.0"
+    version: "9.17.0"
   stream_transform:
     dependency: transitive
     description:

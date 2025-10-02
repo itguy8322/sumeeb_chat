@@ -150,7 +150,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
           final recentChat = RecentChatModel(
             user: appUser,
             message: user.lastMessage!,
-            type: user.type!,
+            type: user.type ?? 'text',
             messageCount: "${user.messageCount}",
             date: user.date ?? '',
             status: user.status ?? 'received',
@@ -171,7 +171,7 @@ class RecentChatCubit extends Cubit<RecentChatState> {
             profilePhoto: user.profilePhoto,
           ),
           message: user.lastMessage!,
-          type: user.type!,
+          type: user.type ?? 'text',
           messageCount: user.messageCount.toString(),
           date: user.date!,
           status: user.status!,

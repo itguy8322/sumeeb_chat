@@ -45,7 +45,7 @@ void main() async {
     DeviceOrientation.portraitUp, // normal portrait
   ]);
   if (Platform.isWindows) {
-    window_size.setWindowMinSize(const Size.fromWidth(760)); // Max size
+    window_size.setWindowMinSize(const Size.fromWidth(900)); // Max size
   }
   if (Platform.isWindows) {
     await Firebase.initializeApp(

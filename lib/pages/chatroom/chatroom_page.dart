@@ -6,6 +6,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:sumeeb_chat/data/cubits/chat-connection/chat_connection_cubit.dart';
@@ -76,20 +77,18 @@ class _ChatroomPageState extends State<ChatroomPage> {
     try {
       final hasPermission = await _recorder.hasPermission();
       if (!hasPermission) {
-        print("No microphone permission!");
         return;
       }
       final status = await Permission.microphone.request();
       if (!status.isGranted) {
-        print("Microphone permission not granted!");
         return;
       }
       if (!_isRecording) {
         // Start recording
-        final dir =
-            "/storage/emulated/0/Documents"; // await getApplicationDocumentsDirectory();
+
+        final dir = await getApplicationDocumentsDirectory();
         final path =
-            '$dir/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
+            '${dir.path}/voice_note_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
         await _recorder.start(path: path, RecordConfig());
         startRecordTimer();
@@ -97,12 +96,9 @@ class _ChatroomPageState extends State<ChatroomPage> {
           _isRecording = true;
           _filePath = path;
         });
-
-        print("Recording started: $_filePath");
       } else {
         // Stop recording
         final path = await _recorder.stop();
-        print("########### PATH: $path #################");
         setState(() {
           _isRecording = false;
           _filePath = path;
@@ -132,16 +128,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                 ],
               ),
             );
-            print("Recording saved: $path (${length} bytes)");
-          } else {
-            print("Recording stopped but file not found: $path");
-          }
+          } else {}
         }
       }
-    } catch (e, st) {
-      print("Recording error: $e");
-      print(st);
-    }
+    } catch (e, st) {}
   }
 
   void cancelRecording() async {
@@ -153,7 +143,6 @@ class _ChatroomPageState extends State<ChatroomPage> {
         _filePath = null;
         _recordDuration = 0;
       });
-      print("Recording cancelled");
     }
   }
 
@@ -358,9 +347,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
       ],
     );
 
-    if (selected != null) {
-      print("Selected: $selected");
-    }
+    if (selected != null) {}
   }
 
   void scrollToQuotedMessage(String messageId) {
@@ -402,14 +389,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
             builder: (context, state) {
               if (state.channel != null) {
                 return StreamChannel(
-                  channel:
-                      state.channel ??
-                      Channel(
-                        widget.streamService.client,
-                        'messaging',
-                        '',
-                        extraData: {},
-                      ),
+                  channel: state.channel!,
                   child: StreamChatTheme(
                     data: StreamChatThemeData(
                       otherMessageTheme: StreamMessageThemeData(
@@ -563,6 +543,9 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                 ? Center(child: CircularProgressIndicator())
                                 : (state.connectionSuccess)
                                 ? StreamMessageListView(
+                                    onMessageTap: (p0) {
+                                      print("WHO GOOOOOOOO");
+                                    },
                                     messageBuilder: (context, details, messages, defaultMessage) {
                                       final message = details.message;
                                       final currentUser = StreamChat.of(
@@ -575,9 +558,6 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                           ? message.extraData['reply_to']
                                                 as Map<String, dynamic>
                                           : null;
-                                      print(
-                                        "############@@@@@@@@@@@############# REPLY TO: ${replyTo?['type']}",
-                                      );
                                       // if (replyTo != null) {
                                       //   print(
                                       //     "+${replyTo["user"]} == ${currentUser!.id}",
@@ -609,15 +589,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                                 : SizedBox(),
                                             GestureDetector(
                                               key: key,
-                                              onPanStart: (details) {
-                                                print(
-                                                  "Finger down at: ${details.localPosition}",
-                                                );
-                                              },
+                                              onPanStart: (details) {},
                                               onPanUpdate: (details) {
                                                 // Check horizontal movement (swipe right)
                                                 if (details.delta.dx > 10) {
-                                                  print("Swiping right...");
                                                   setState(() {
                                                     isReplyMessage = true;
                                                     replyMessage = message;
@@ -625,12 +600,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                                 }
                                               },
                                               onPanEnd: (details) {
-                                                print("Finger lifted");
-                                                if (isReplyMessage) {
-                                                  print(
-                                                    "Replying to: ${message.attachments.first.type?.rawType}",
-                                                  );
-                                                }
+                                                if (isReplyMessage) {}
                                               },
                                               child: Stack(
                                                 children: [
@@ -718,15 +688,10 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                               : SizedBox(),
                                           GestureDetector(
                                             key: key,
-                                            onPanStart: (details) {
-                                              print(
-                                                "Finger down at: ${details.localPosition}",
-                                              );
-                                            },
+                                            onPanStart: (details) {},
                                             onPanUpdate: (details) {
                                               // Check horizontal movement (swipe right)
                                               if (details.delta.dx > 10) {
-                                                print("Swiping right...");
                                                 setState(() {
                                                   isReplyMessage = true;
                                                   replyMessage = message;
@@ -734,17 +699,13 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                               }
                                             },
                                             onPanEnd: (details) {
-                                              print("Finger lifted");
-                                              if (isReplyMessage) {
-                                                print(
-                                                  "Replying to: ${message.attachments.first.type?.rawType}",
-                                                );
-                                              }
+                                              if (isReplyMessage) {}
                                             },
                                             child: defaultMessage.copyWith(
                                               showDeleteMessage: true,
                                               showReplyMessage: true,
                                               showReactionPicker: true,
+                                              // onMessageLongPress: (p0) {},
                                               attachmentBuilders: [
                                                 AudioAttachmentBuilder(),
                                               ],
@@ -854,7 +815,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                                 .addChatToHistory(
                                                   other,
                                                   text.trim(),
-                                                  type!,
+                                                  type ?? 'regular',
                                                 );
                                             await state.channel!.sendMessage(
                                               Message(
@@ -940,7 +901,7 @@ class _ChatroomPageState extends State<ChatroomPage> {
                                               .addChatToHistory(
                                                 other,
                                                 text,
-                                                type!,
+                                                type ?? 'regular',
                                               );
                                           await state.channel!.sendMessage(
                                             Message(
